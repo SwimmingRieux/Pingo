@@ -1,8 +1,11 @@
-
 package main
-import("fmt")
+
+import (
+	"fmt"
+)
 
 func main() {
+	fmt.Println("Hello!")
 	// Run the pinging service thread
 	// Run the domain sorter service thread
 	var command string
@@ -20,5 +23,6 @@ func main() {
 		case "ping":
 			// ping the current connection
 		}
+		fmt.Scan(&command)
 	}
 }
