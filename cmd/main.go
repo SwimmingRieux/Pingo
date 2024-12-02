@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"pingo/internal/config_collector"
 )
 
 func main() {
@@ -14,6 +15,8 @@ func main() {
 		switch command {
 		case "update":
 			// run the update subscription links service thread
+			sub := config_collector.SubscriptionLoader{}
+			sub.GetSub()
 		case "connect":
 			// connect to vpn
 		case "reconnect":
