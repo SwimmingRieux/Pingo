@@ -1,6 +1,5 @@
 package abstract
 
 type ISubscriptionLoader interface {
-	getSub()
-	Load()
+	GetSub(url string) (string, error)
 }

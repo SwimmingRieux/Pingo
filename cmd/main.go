@@ -16,7 +16,12 @@ func main() {
 		case "update":
 			// run the update subscription links service thread
 			sub := config_collector.SubscriptionLoader{}
-			sub.GetSub()
+			res, err := sub.GetSub("")
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(res)
+			}
 		case "connect":
 			// connect to vpn
 		case "reconnect":
