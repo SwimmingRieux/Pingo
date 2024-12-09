@@ -56,7 +56,7 @@ func (this *ConfigCreator) Create(input string) error {
 		return fmt.Errorf("Error creating grpup:", err)
 	}
 	groupPath := path.Join("default_path", groupName)
-	err := os.Mkdir(groupPath, 0755)
+	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
 		return fmt.Errorf("Error creating directory:", err)
 	}
