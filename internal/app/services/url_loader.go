@@ -1,14 +1,14 @@
 package services
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
 
 type UrlLoader struct{}
 
-func (this *UrlLoader) Load(url string) (string, error) {
+func (loader *UrlLoader) Load(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -16,7 +16,8 @@ func (this *UrlLoader) Load(url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("Error: HTTP status " + string(rune(resp.StatusCode)))
+		return "", fmt.Errorf("error: HTTP status %v", resp.StatusCode)
+
 	}
 
 	body, err := io.ReadAll(resp.Body)

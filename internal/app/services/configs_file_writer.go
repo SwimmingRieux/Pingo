@@ -2,6 +2,6 @@ package services
 
 type ConfigsWriter struct{}
 
-func (this *ConfigsWriter) Write(jsonConfig string, path string) error {
+func (writer *ConfigsWriter) Write(jsonConfig string, path string) error {
 
 }
