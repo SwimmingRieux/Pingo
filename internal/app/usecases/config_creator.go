@@ -13,11 +13,12 @@ import (
 )
 
 type ConfigCreator struct {
-	Loader     abstraction.UrlLoader
-	Extractor  abstraction.ConfigsExtractor
-	Writer     abstraction.ConfigsWriter
-	Formatter  abstraction.ConfigsFormatter
-	Repository repository.ConfigRepository
+	loader           abstraction.UrlLoader
+	extractor        abstraction.ConfigsExtractor
+	writer           abstraction.ConfigsWriter
+	formatter        abstraction.ConfigsFormatter
+	configRepository repository.ConfigRepository
+	groupRepository  repository.GroupRepository
 }
 
 func (creator *ConfigCreator) Create(input string) error {
@@ -25,7 +26,7 @@ func (creator *ConfigCreator) Create(input string) error {
 	var err error
 
 	if strings.HasPrefix(input, "http") && !strings.Contains(input, " ") {
-		configsString, err = creator.Loader.Load(input)
+		configsString, err = creator.loader.Load(input)
 		if err != nil {
 			return fmt.Errorf("could not load from the link: %w", err)
 		}
@@ -33,14 +34,14 @@ func (creator *ConfigCreator) Create(input string) error {
 		configsString = input
 	}
 
-	groupName, rawConfigs := creator.Extractor.Extract(configsString)
+	groupName, rawConfigs := creator.extractor.Extract(configsString)
 	if len(rawConfigs) == 0 {
 		return errors.New("could not found any config")
 	}
 
 	var formattedConfigs []string
 	for _, rawConfig := range rawConfigs {
-		formattedConfig, err := creator.Formatter.Format(rawConfig)
+		formattedConfig, err := creator.formatter.Format(rawConfig)
 		if err == nil {
 			formattedConfigs = append(formattedConfigs, formattedConfig)
 		}
@@ -52,7 +53,7 @@ func (creator *ConfigCreator) Create(input string) error {
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, 10)
 
-	newGroupId, err := creator.Repository.CreateGroup(groupName)
+	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
 		return fmt.Errorf("error creating grpup: %w", err)
 	}
@@ -70,9 +71,9 @@ func (creator *ConfigCreator) Create(input string) error {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 			configPath := path.Join(groupPath, strconv.Itoa(index))
-			err = creator.Writer.Write(config, configPath)
+			err = creator.writer.Write(config, configPath)
 			if err == nil {
-				creator.Repository.CreateConfig(newGroupId, configPath)
+				creator.configRepository.CreateConfig(newGroupId, configPath)
 			}
 		}(formattedConfig, i)
 	}
