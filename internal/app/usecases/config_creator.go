@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	configsAbstraction "pingo/configs/abstraction"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/repository"
 	"strconv"
@@ -19,6 +20,7 @@ type ConfigCreator struct {
 	formatter        abstraction.ConfigsFormatter
 	configRepository repository.ConfigRepository
 	groupRepository  repository.GroupRepository
+	configReader     configsAbstraction.Config
 }
 
 func (creator *ConfigCreator) Create(input string) error {
@@ -28,7 +30,8 @@ func (creator *ConfigCreator) Create(input string) error {
 	if strings.HasPrefix(input, "http") && !strings.Contains(input, " ") {
 		configsString, err = creator.loader.Load(input)
 		if err != nil {
-			return fmt.Errorf("could not load from the link: %w", err)
+			errText, _ := creator.configReader.Get("errors.load_from_link_error")
+			return fmt.Errorf("%v %w", errText, err)
 		}
 	} else {
 		configsString = input
@@ -36,7 +39,8 @@ func (creator *ConfigCreator) Create(input string) error {
 
 	groupName, rawConfigs := creator.extractor.Extract(configsString)
 	if len(rawConfigs) == 0 {
-		return errors.New("could not found any config")
+		errText, _ := creator.configReader.Get("errors.config_not_found")
+		return errors.New(errText)
 	}
 
 	var formattedConfigs []string
@@ -47,20 +51,27 @@ func (creator *ConfigCreator) Create(input string) error {
 		}
 	}
 	if len(formattedConfigs) == 0 {
-		return errors.New("could not format any config")
+		errText, _ := creator.configReader.Get("errors.config_format_error")
+		return errors.New(errText)
 	}
 
+	stringCount, _ := creator.configReader.Get("goroutines_max")
+	goroutinesMaxCount, _ := strconv.Atoi(stringCount)
+	semaphore := make(chan struct{}, goroutinesMaxCount)
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 10)
 
 	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
-		return fmt.Errorf("error creating grpup: %w", err)
+		errText, _ := creator.configReader.Get("errors.group_creating_error")
+		return fmt.Errorf("%v %w", errText, err)
 	}
-	groupPath := path.Join("default_path", groupName)
+
+	v2ConfigsPath, _ := creator.configReader.Get("v2.config_path")
+	groupPath := path.Join(v2ConfigsPath, groupName)
 	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
-		return fmt.Errorf("error creating directory: %w", err)
+		errText, _ := creator.configReader.Get("errors.directory_creating_error")
+		return fmt.Errorf("%v %w", errText, err)
 	}
 
 	for i, formattedConfig := range formattedConfigs {
