@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -12,53 +13,54 @@ import (
 )
 
 type ConfigCreator struct {
-	Loader     abstraction.UrlLoader
-	Extractor  abstraction.ConfigsExtractor
-	Writer     abstraction.ConfigsWriter
-	Formatter  abstraction.ConfigsFormatter
-	Repository repository.ConfigRepository
+	loader           abstraction.UrlLoader
+	extractor        abstraction.ConfigsExtractor
+	writer           abstraction.ConfigsWriter
+	formatter        abstraction.ConfigsFormatter
+	configRepository repository.ConfigRepository
+	groupRepository  repository.GroupRepository
 }
 
-func (this *ConfigCreator) Create(input string) error {
+func (creator *ConfigCreator) Create(input string) error {
 	var configsString string
 	var err error
 
 	if strings.HasPrefix(input, "http") && !strings.Contains(input, " ") {
-		configsString, err = this.Loader.Load(input)
+		configsString, err = creator.loader.Load(input)
 		if err != nil {
-			return fmt.Errorf("Could not load from the link: ", err)
+			return fmt.Errorf("could not load from the link: %w", err)
 		}
 	} else {
 		configsString = input
 	}
 
-	groupName, rawConfigs := this.Extractor.Extract(configsString)
+	groupName, rawConfigs := creator.extractor.Extract(configsString)
 	if len(rawConfigs) == 0 {
-		return fmt.Errorf("Could not found any config")
+		return errors.New("could not found any config")
 	}
 
 	var formattedConfigs []string
 	for _, rawConfig := range rawConfigs {
-		formattedConfig, err := this.Formatter.Format(rawConfig)
+		formattedConfig, err := creator.formatter.Format(rawConfig)
 		if err == nil {
 			formattedConfigs = append(formattedConfigs, formattedConfig)
 		}
 	}
 	if len(formattedConfigs) == 0 {
-		return fmt.Errorf("Could not format any config")
+		return errors.New("could not format any config")
 	}
 
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, 10)
 
-	newGroupId, err := this.Repository.CreateGroup(groupName)
+	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
-		return fmt.Errorf("Error creating grpup:", err)
+		return fmt.Errorf("error creating grpup: %w", err)
 	}
 	groupPath := path.Join("default_path", groupName)
 	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Error creating directory:", err)
+		return fmt.Errorf("error creating directory: %w", err)
 	}
 
 	for i, formattedConfig := range formattedConfigs {
@@ -69,9 +71,9 @@ func (this *ConfigCreator) Create(input string) error {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 			configPath := path.Join(groupPath, strconv.Itoa(index))
-			err = this.Writer.Write(config, configPath)
+			err = creator.writer.Write(config, configPath)
 			if err == nil {
-				this.Repository.CreateConfig(newGroupId, configPath)
+				creator.configRepository.CreateConfig(newGroupId, configPath)
 			}
 		}(formattedConfig, i)
 	}
