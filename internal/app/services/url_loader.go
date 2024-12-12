@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"pingo/configs/abstraction"
 )
 
-type UrlLoader struct{}
+type UrlLoader struct {
+	configReader abstraction.Config
+}
 
 func (loader *UrlLoader) Load(url string) (string, error) {
 	resp, err := http.Get(url)
@@ -16,7 +19,8 @@ func (loader *UrlLoader) Load(url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error: HTTP status %v", resp.StatusCode)
+		errText, _ := loader.configReader.Get("errors.http_status")
+		return "", fmt.Errorf("%v %v", errText, resp.StatusCode)
 
 	}
 

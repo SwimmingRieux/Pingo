@@ -1,0 +1,15 @@
+{
+    "errors": {
+      "load_from_link_error": "error loading data from link.",
+      "config_not_found": "config not found.",
+      "config_format_error": "error formatting config.",
+      "group_creating_error": "error creating group.",
+      "directory_creating_error": "error creating directory.",
+      "http_status": "http status: "
+    },
+    "goroutines_max": "10",
+    "v2": {
+      "config_path": "/path/to/configs/v2"
+    }
+  }
+  
