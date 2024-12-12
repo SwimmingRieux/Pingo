@@ -2,6 +2,7 @@
     "errors": {
       "load_from_link_error": "error loading data from link.",
       "config_not_found": "config not found.",
+      "group_not_found": "group not found",
       "config_format_error": "error formatting config.",
       "group_creating_error": "error creating group.",
       "directory_creating_error": "error creating directory.",
