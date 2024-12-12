@@ -5,7 +5,9 @@
       "config_format_error": "error formatting config.",
       "group_creating_error": "error creating group.",
       "directory_creating_error": "error creating directory.",
-      "http_status": "http status: "
+      "http_status": "http status: ",
+      "file_remove_error": "an error happend removing the file, please manually remove the path: ",
+      "config_remove_error": "an error happend removing the config: "
     },
     "goroutines_max": "10",
     "v2": {
