@@ -4,7 +4,6 @@ import (
 	"fmt"
 	configAbstraction "pingo/configs/abstraction"
 	"pingo/internal/app/services/abstraction"
-	"pingo/internal/domain/enums"
 	"sync"
 )
 
@@ -13,20 +12,20 @@ type FormatterFactory struct {
 	configReader configAbstraction.Config
 }
 
-func (factory *FormatterFactory) Fetch(formatterType enums.FormatterType) (abstraction.ConfigsFormatter, error) {
+func (factory *FormatterFactory) Fetch(formatterType string) (abstraction.ConfigsFormatter, error) {
 	if cached, ok := factory.formatters.Load(formatterType); ok {
 		return cached.(abstraction.ConfigsFormatter), nil
 	}
 	var formatter abstraction.ConfigsFormatter
 
 	switch formatterType {
-	case enums.VmessFormatter:
+	case "vmess":
 		formatter = &VmessConfigsFormatter{}
-	case enums.VlessFormatter:
+	case "vless":
 		formatter = &VlessConfigsFormatter{}
-	case enums.TrojanFormatter:
+	case "trojan":
 		formatter = &TrojanConfigsFormatter{}
-	case enums.SsFormatter:
+	case "ss":
 		formatter = &SsConfigsFormatter{}
 	default:
 		errText, _ := factory.configReader.Get("invalid_formatter")

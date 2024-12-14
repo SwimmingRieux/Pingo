@@ -17,10 +17,10 @@ type ConfigCreator struct {
 	loader           abstraction.UrlLoader
 	extractor        abstraction.ConfigsExtractor
 	writer           abstraction.ConfigsWriter
-	formatter        abstraction.ConfigsFormatter
 	configRepository repository.ConfigRepository
 	groupRepository  repository.GroupRepository
 	configReader     configsAbstraction.Config
+	formatterFactory abstraction.FormatterFactory
 }
 
 func (creator *ConfigCreator) Create(input string) error {
@@ -45,7 +45,13 @@ func (creator *ConfigCreator) Create(input string) error {
 
 	var formattedConfigs []string
 	for _, rawConfig := range rawConfigs {
-		formattedConfig, err := creator.formatter.Format(rawConfig)
+		configType := strings.Split(rawConfig, "://")[0]
+		formatter, err := creator.formatterFactory.Fetch(configType)
+		if err != nil {
+			continue
+		}
+
+		formattedConfig, err := formatter.Format(rawConfig)
 		if err == nil {
 			formattedConfigs = append(formattedConfigs, formattedConfig)
 		}
