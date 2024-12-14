@@ -8,7 +8,8 @@
       "directory_creating_error": "error creating directory.",
       "http_status": "http status: ",
       "file_remove_error": "an error happend removing the file, please manually remove the path: ",
-      "config_remove_error": "an error happend removing the config: "
+      "config_remove_error": "an error happend removing the config: ",
+      "invalid_formatter": "given formatter is invalid: "
     },
     "goroutines_max": "10",
     "v2": {
