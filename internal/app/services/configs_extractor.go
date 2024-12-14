@@ -9,14 +9,12 @@ import (
 type ConfigsExtractor struct{}
 
 func (extractor *ConfigsExtractor) Extract(configs string) (string, []string) {
-	checkEncoding := CheckEncoding(configs)
-	if checkEncoding {
+	if checkEncoding(configs) {
 		decoded, err := base64.StdEncoding.DecodeString(configs)
 		if err != nil {
 			return "", nil
-		} else {
-			configs = string(decoded)
 		}
+		configs = string(decoded)
 	}
 
 	splitConfigs := strings.Fields(configs)
@@ -33,11 +31,14 @@ func (extractor *ConfigsExtractor) Extract(configs string) (string, []string) {
 	return groupName, validConfigs
 }
 
-func CheckEncoding(input string) bool {
+func checkEncoding(input string) bool {
+	if len(input) != 4 {
+		return false
+	}
 	for _, ch := range input {
-		if !(ch == 43 || (ch >= 47 && ch <= 57) || ch == 61 || (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122)) {
-			return false // config wasn't already base64 encoded
+		if !(ch == '+' || (ch >= '/' && ch <= '9') || ch == '=' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
+			return false
 		}
 	}
-	return true // config was already base64 encoded
+	return true
 }
