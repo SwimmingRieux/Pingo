@@ -1,58 +1,61 @@
 package configs
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
-	"strings"
-	"sync"
+
+	"github.com/spf13/viper"
 )
 
-type JsonConfig struct {
-	configMap map[string]interface{}
-	mu        sync.RWMutex
-	once      sync.Once
+type Configuration struct {
+	Errors        Errors `json:"errors"`
+	GoroutinesMax int    `json:"goroutines_max"`
+	V2            V2     `json:"v2"`
 }
 
-var (
-	instance *JsonConfig
-	once     sync.Once
-)
-
-func GetInstance() *JsonConfig {
-	once.Do(func() {
-		instance = &JsonConfig{}
-	})
-	return instance
+type Errors struct {
+	LoadFromLinkError      string `json:"load_from_link_error"`
+	ConfigNotFound         string `json:"config_not_found"`
+	GroupNotFound          string `json:"group_not_found"`
+	ConfigFormatError      string `json:"config_format_error"`
+	GroupCreatingError     string `json:"group_creating_error"`
+	DirectoryCreatingError string `json:"directory_creating_error"`
+	HttpStatus             string `json:"http_status"`
+	FileRemoveError        string `json:"file_remove_error"`
+	ConfigRemoveError      string `json:"config_remove_error"`
+	InvalidFormatter       string `json:"invalid_formatter"`
 }
 
-func (c *JsonConfig) Initialize(path string) error {
-	var err error
-	c.once.Do(func() {
-		jsonData, e := os.ReadFile(path)
-		if e != nil {
-			err = fmt.Errorf("error reading config file: %w", e)
-			return
-		}
-		if e = json.Unmarshal(jsonData, &c.configMap); e != nil {
-			err = fmt.Errorf("error unmarshaling config file: %w", e)
-		}
-	})
-	return err
+type V2 struct {
+	ConfigurationPath string `json:"config_path"`
 }
 
-func (c *JsonConfig) Get(variablePath string) (string, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+func getDefaultConfig() string {
+	return "./config/config.json"
+}
 
-	parts := strings.Split(variablePath, ".")
-	currentMap := c.configMap
-	for _, part := range parts {
-		var ok bool
-		currentMap, ok = currentMap[part].(map[string]interface{})
-		if !ok {
-			return "", fmt.Errorf("config path %q not found", variablePath)
-		}
+func NewConfig() (*Configuration, error) {
+	path := os.Getenv("cfgPath")
+	if path == "" {
+		path = getDefaultConfig()
 	}
-	return fmt.Sprintf("%v", currentMap), nil
+	viperConfig := viper.New()
+	viperConfig.SetConfigName(path)
+	viperConfig.AddConfigPath(".")
+	viperConfig.AutomaticEnv()
+	if err := viperConfig.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			return nil, errors.New("config file not found")
+		}
+		return nil, err
+	}
+
+	var DefaultConfig Configuration
+
+	err := viperConfig.Unmarshal(&DefaultConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DefaultConfig, nil
 }
