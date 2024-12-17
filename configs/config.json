@@ -11,7 +11,8 @@
       "write_to_file_error": "failed to write to file: ",
       "file_remove_error": "an error happend removing the file, please manually remove the path: ",
       "config_remove_error": "an error happend removing the config: ",
-      "invalid_formatter": "given formatter is invalid: "
+      "invalid_formatter": "given formatter is invalid: ",
+      "invalid_port_setter": "given port setter is invalid: "
     },
     "goroutines_max": "10",
     "v2": {

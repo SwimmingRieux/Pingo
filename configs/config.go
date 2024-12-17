@@ -26,6 +26,7 @@ type Errors struct {
 	WriteToFileError       string `json:"write_to_file_error"`
 	ConfigRemoveError      string `json:"config_remove_error"`
 	InvalidFormatter       string `json:"invalid_formatter"`
+	InvalidPortSetter      string `json:"invalid_port_setter"`
 }
 
 type V2 struct {
