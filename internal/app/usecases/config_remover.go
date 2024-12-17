@@ -4,31 +4,31 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"pingo/configs/abstraction"
+	"pingo/configs"
 	"pingo/internal/domain/repository"
 )
 
 type ConfigRemover struct {
 	configRepository repository.ConfigRepository
-	configReader     abstraction.Config
+	configuration    configs.Configuration
 }
 
 func (remover *ConfigRemover) Remove(id int) error {
 	config, err := remover.configRepository.GetConfig(id)
 	if err != nil {
-		errText, _ := remover.configReader.Get("errors.config_not_found")
+		errText := remover.configuration.Errors.ConfigNotFound
 		return fmt.Errorf("%v %w", errText, err)
 	}
-	defaultPath, _ := remover.configReader.Get("v2.config_path")
+	defaultPath := remover.configuration.V2.ConfigurationPath
 	filePath := filepath.Join(defaultPath, config.Path)
 
 	if err = remover.configRepository.DeleteConfig(id); err != nil {
-		errText, _ := remover.configReader.Get("file_remove_error")
+		errText := remover.configuration.Errors.FileRemoveError
 		return fmt.Errorf("%v %v %w", errText, config.Path, err)
 	}
 
 	if err = os.Remove(filePath); err != nil {
-		errText, _ := remover.configReader.Get("config_remove_error")
+		errText := remover.configuration.Errors.ConfigRemoveError
 		return fmt.Errorf("%v %w", errText, err)
 	}
 	return nil

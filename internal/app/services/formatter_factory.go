@@ -2,14 +2,14 @@ package services
 
 import (
 	"fmt"
-	configAbstraction "pingo/configs/abstraction"
+	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"sync"
 )
 
 type FormatterFactory struct {
-	formatters   sync.Map
-	configReader configAbstraction.Config
+	formatters    sync.Map
+	configuration configs.Configuration
 }
 
 func (factory *FormatterFactory) Fetch(formatterType string) (abstraction.ConfigsFormatter, error) {
@@ -28,7 +28,7 @@ func (factory *FormatterFactory) Fetch(formatterType string) (abstraction.Config
 	case "ss":
 		formatter = &SsConfigsFormatter{}
 	default:
-		errText, _ := factory.configReader.Get("invalid_formatter")
+		errText := factory.configuration.Errors.InvalidFormatter
 		return nil, fmt.Errorf("%v %v", errText, formatterType)
 	}
 
