@@ -7,6 +7,8 @@
       "group_creating_error": "error creating group.",
       "directory_creating_error": "error creating directory.",
       "http_status": "http status: ",
+      "file_creating_error": "error creating directory.",
+      "write_to_file_error": "failed to write to file: ",
       "file_remove_error": "an error happend removing the file, please manually remove the path: ",
       "config_remove_error": "an error happend removing the config: ",
       "invalid_formatter": "given formatter is invalid: "
