@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	configsAbstraction "pingo/configs/abstraction"
+	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/repository"
 	"strconv"
@@ -19,7 +19,7 @@ type ConfigCreator struct {
 	writer           abstraction.ConfigsWriter
 	configRepository repository.ConfigRepository
 	groupRepository  repository.GroupRepository
-	configReader     configsAbstraction.Config
+	configuration    configs.Configuration
 	formatterFactory abstraction.FormatterFactory
 }
 
@@ -30,7 +30,7 @@ func (creator *ConfigCreator) Create(input string) error {
 	if strings.HasPrefix(input, "http") && !strings.Contains(input, " ") {
 		configsString, err = creator.loader.Load(input)
 		if err != nil {
-			errText, _ := creator.configReader.Get("errors.load_from_link_error")
+			errText := creator.configuration.Errors.LoadFromLinkError
 			return fmt.Errorf("%v %w", errText, err)
 		}
 	} else {
@@ -39,7 +39,7 @@ func (creator *ConfigCreator) Create(input string) error {
 
 	groupName, rawConfigs := creator.extractor.Extract(configsString)
 	if len(rawConfigs) == 0 {
-		errText, _ := creator.configReader.Get("errors.config_not_found")
+		errText := creator.configuration.Errors.ConfigNotFound
 		return errors.New(errText)
 	}
 
@@ -57,26 +57,25 @@ func (creator *ConfigCreator) Create(input string) error {
 		}
 	}
 	if len(formattedConfigs) == 0 {
-		errText, _ := creator.configReader.Get("errors.config_format_error")
+		errText := creator.configuration.Errors.ConfigFormatError
 		return errors.New(errText)
 	}
 
-	stringCount, _ := creator.configReader.Get("goroutines_max")
-	goroutinesMaxCount, _ := strconv.Atoi(stringCount)
+	goroutinesMaxCount := creator.configuration.GoroutinesMax
 	semaphore := make(chan struct{}, goroutinesMaxCount)
 	var wg sync.WaitGroup
 
 	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
-		errText, _ := creator.configReader.Get("errors.group_creating_error")
+		errText := creator.configuration.Errors.GroupCreatingError
 		return fmt.Errorf("%v %w", errText, err)
 	}
 
-	v2ConfigsPath, _ := creator.configReader.Get("v2.config_path")
+	v2ConfigsPath := creator.configuration.V2.ConfigurationPath
 	groupPath := path.Join(v2ConfigsPath, groupName)
 	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
-		errText, _ := creator.configReader.Get("errors.directory_creating_error")
+		errText := creator.configuration.Errors.DirectoryCreatingError
 		return fmt.Errorf("%v %w", errText, err)
 	}
 

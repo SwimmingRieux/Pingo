@@ -22,6 +22,7 @@ type Errors struct {
 	DirectoryCreatingError string `json:"directory_creating_error"`
 	HttpStatus             string `json:"http_status"`
 	FileRemoveError        string `json:"file_remove_error"`
+	WriteToFileError       string `json:"write_to_file_error"`
 	ConfigRemoveError      string `json:"config_remove_error"`
 	InvalidFormatter       string `json:"invalid_formatter"`
 }
