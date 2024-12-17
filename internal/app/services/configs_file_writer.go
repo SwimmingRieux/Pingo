@@ -13,15 +13,15 @@ type ConfigsWriter struct {
 func (writer *ConfigsWriter) Write(jsonConfig string, path string) error {
 	file, err := os.Create(path)
 	if err != nil {
-		errText := writer.configuration.Errors.DirectoryCreatingError
-		return fmt.Errorf("%v", errText)
+		errText := writer.configuration.Errors.FileCreatingError
+		return fmt.Errorf("%v %w", errText, err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(jsonConfig)
 	if err != nil {
 		errText := writer.configuration.Errors.WriteToFileError
-		return fmt.Errorf("%v %v", errText, err)
+		return fmt.Errorf("%v %w", errText, err)
 	}
 
 	return nil

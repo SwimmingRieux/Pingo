@@ -20,6 +20,7 @@ type Errors struct {
 	ConfigFormatError      string `json:"config_format_error"`
 	GroupCreatingError     string `json:"group_creating_error"`
 	DirectoryCreatingError string `json:"directory_creating_error"`
+	FileCreatingError      string `json:"file_creating_error"`
 	HttpStatus             string `json:"http_status"`
 	FileRemoveError        string `json:"file_remove_error"`
 	WriteToFileError       string `json:"write_to_file_error"`
