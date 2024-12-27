@@ -76,7 +76,7 @@ func (organizer *ConfigsOrganizer) pingAllConfigs(configs []entities.Config, dom
 				defer wg.Done()
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
-				organizer.pinger.Ping(config, domain, listeners[i], &configScoresMap)
+				organizer.pinger.Ping(config, domain, listeners[i], configScoresMap)
 			}()
 		}
 	}
