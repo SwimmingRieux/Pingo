@@ -32,6 +32,7 @@ func (organizer *ConfigsOrganizer) Organize(groupId int, domainsCountLimit int) 
 	if err != nil {
 		return err
 	}
+	defer organizer.closeAllListeners(listeners)
 
 	if err = organizer.setPortOnConfigs(configs, listeners); err != nil {
 		return err
@@ -124,6 +125,12 @@ func (organizer *ConfigsOrganizer) getListeners(configs []entities.Config) ([]ne
 		return nil, fmt.Errorf("%v", errText)
 	}
 	return listeners, nil
+}
+
+func (organizer *ConfigsOrganizer) closeAllListeners(listeners []net.Listener) {
+	for _, listener := range listeners {
+		listener.Close()
+	}
 }
 
 func (organizer *ConfigsOrganizer) getConfigs(groupId int) ([]entities.Config, error) {
