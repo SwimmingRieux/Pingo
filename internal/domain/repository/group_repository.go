@@ -6,4 +6,5 @@ type GroupRepository interface {
 	CreateGroup(groupName string) (int, error)
 	GetGroup(id int) (entities.Group, error)
 	DeleteGroup(id int) error
+	GetConfigs(id int) ([]entities.Config, error)
 }

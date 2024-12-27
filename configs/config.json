@@ -12,9 +12,13 @@
       "file_remove_error": "an error happend removing the file, please manually remove the path: ",
       "config_remove_error": "an error happend removing the config: ",
       "invalid_formatter": "given formatter is invalid: ",
-      "invalid_port_setter": "given port setter is invalid: "
+      "invalid_port_setter": "given port setter is invalid: ",
+      "not_enough_ports_found": "could not find enough ports for pinging the configs."
     },
-    "goroutines_max": "10",
+    "goroutines_max": 10,
+    "ports_count_limit": 20,
+    "pinger_goroutines_max": 10,
+    "listener_iteration_limit": 1000,
     "v2": {
       "config_path": "/path/to/configs/v2"
     }

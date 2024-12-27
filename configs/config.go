@@ -8,12 +8,16 @@ import (
 )
 
 type Configuration struct {
-	Errors        Errors `json:"errors"`
-	GoroutinesMax int    `json:"goroutines_max"`
-	V2            V2     `json:"v2"`
+	Errors                 Errors `json:"errors"`
+	GoroutinesMax          int    `json:"goroutines_max"`
+	PingerGoroutinesMax    int    `json:"pinger_goroutines_max"`
+	PortsCountLimit        int    `json:"ports_count_limit"`
+	ListenerIterationLimit int    `json:"listener_iteration_limit"`
+	V2                     V2     `json:"v2"`
 }
 
 type Errors struct {
+	NotEnoughPortsFound    string `json:"not_enough_ports_found"`
 	LoadFromLinkError      string `json:"load_from_link_error"`
 	ConfigNotFound         string `json:"config_not_found"`
 	GroupNotFound          string `json:"group_not_found"`

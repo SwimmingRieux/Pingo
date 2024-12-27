@@ -1,5 +1,7 @@
 package abstraction
 
+import "net"
+
 type PortSetter interface {
-	SetPort(port int, configPath string) error
+	SetPort(listener net.Listener, configPath string) error
 }
