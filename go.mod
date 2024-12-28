@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/spf13/viper v1.19.0
-	golang.org/x/net v0.31.0
+	golang.org/x/net v0.33.0
 )
 
 require (
