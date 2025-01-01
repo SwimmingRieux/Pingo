@@ -13,6 +13,11 @@ import (
 	"sync"
 )
 
+type FormattedConfigAndType struct {
+	FormattedConfig string
+	Type            string
+}
+
 type ConfigCreator struct {
 	loader           abstraction.UrlLoader
 	extractor        abstraction.ConfigsExtractor
@@ -43,7 +48,7 @@ func (creator *ConfigCreator) Create(input string) error {
 		return errors.New(errText)
 	}
 
-	var formattedConfigs []string
+	var formattedConfigs []FormattedConfigAndType
 	for _, rawConfig := range rawConfigs {
 		configType := strings.Split(rawConfig, "://")[0]
 		formatter, err := creator.formatterFactory.Fetch(configType)
@@ -52,8 +57,9 @@ func (creator *ConfigCreator) Create(input string) error {
 		}
 
 		formattedConfig, err := formatter.Format(rawConfig)
+		formattedConfigAndType := FormattedConfigAndType{formattedConfig, configType}
 		if err == nil {
-			formattedConfigs = append(formattedConfigs, formattedConfig)
+			formattedConfigs = append(formattedConfigs, formattedConfigAndType)
 		}
 	}
 	if len(formattedConfigs) == 0 {
@@ -82,16 +88,16 @@ func (creator *ConfigCreator) Create(input string) error {
 	for i, formattedConfig := range formattedConfigs {
 
 		wg.Add(1)
-		go func(config string, index int) {
+		go func() {
 			defer wg.Done()
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
-			configPath := path.Join(groupPath, strconv.Itoa(index))
-			err = creator.writer.Write(config, configPath)
+			configPath := path.Join(groupPath, strconv.Itoa(i))
+			err = creator.writer.Write(formattedConfig.FormattedConfig, configPath)
 			if err == nil {
-				creator.configRepository.CreateConfig(newGroupId, configPath)
+				creator.configRepository.CreateConfig(newGroupId, configPath, formattedConfig.Type)
 			}
-		}(formattedConfig, i)
+		}()
 	}
 	wg.Wait()
 

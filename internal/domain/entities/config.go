@@ -2,6 +2,7 @@ package entities
 
 type Config struct {
 	ConfigId int `gorm:"primarykey"`
+	Type     string
 	Path     string
 	Score    float64
 	GroupID  int
