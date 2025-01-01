@@ -1,5 +1,7 @@
 package abstraction
 
+import "context"
+
 type NetworkLogRecorder interface {
-	Record()
+	Record(context context.Context)
 }

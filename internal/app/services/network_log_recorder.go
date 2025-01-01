@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
@@ -12,7 +13,7 @@ type NetworkLogRecorder struct {
 	domainRepository repository.DomainRepository
 }
 
-func (recorder *NetworkLogRecorder) Record() {
+func (recorder *NetworkLogRecorder) Record(context context.Context) {
 	deviceName := os.Getenv("PINGO_DEFAULT_RECORDING_DEVICE")
 	mainPort := os.Getenv("PINGO_DEFAULT_PORT")
 	handle, err := pcap.OpenLive(deviceName, 1600, true, pcap.BlockForever)
@@ -34,18 +35,20 @@ func (recorder *NetworkLogRecorder) Record() {
 	}()
 
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-	for packet := range packetSource.Packets() {
-		networkLayer := packet.NetworkLayer()
-		if networkLayer != nil {
-			dst := networkLayer.NetworkFlow().Dst().String()
-			addresses = append(addresses, dst)
-			if len(addresses) == BigEnough {
-				recorder.domainRepository.AddDomains(addresses)
-				addresses = addresses[:0]
+	for {
+		select {
+		case packet := <-packetSource.Packets():
+			networkLayer := packet.NetworkLayer()
+			if networkLayer != nil {
+				dst := networkLayer.NetworkFlow().Dst().String()
+				addresses = append(addresses, dst)
+				if len(addresses) == BigEnough {
+					recorder.domainRepository.AddDomains(addresses)
+					addresses = addresses[:0]
+				}
 			}
-
-			// todo: close this goroutine when disconnecting
-			// todo: call this as a goroutine in usecase
+		case <-context.Done():
+			return
 		}
 	}
 }
