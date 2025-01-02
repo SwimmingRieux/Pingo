@@ -13,6 +13,7 @@ type Configuration struct {
 	PingerGoroutinesMax    int    `json:"pinger_goroutines_max"`
 	PortsCountLimit        int    `json:"ports_count_limit"`
 	ListenerIterationLimit int    `json:"listener_iteration_limit"`
+	DomainsBigEnough       int    `json:"domains_big_enough"`
 	V2                     V2     `json:"v2"`
 }
 

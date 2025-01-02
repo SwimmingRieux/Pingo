@@ -3,14 +3,17 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
+	"pingo/configs"
+	"pingo/internal/domain/repository"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
-	"os"
-	"pingo/internal/domain/repository"
 )
 
 type NetworkLogRecorder struct {
 	domainRepository repository.DomainRepository
+	configuration    configs.Configuration
 }
 
 func (recorder *NetworkLogRecorder) Record(context context.Context) {
@@ -27,7 +30,7 @@ func (recorder *NetworkLogRecorder) Record(context context.Context) {
 		return
 	}
 
-	var BigEnough = 15
+	var BigEnough = recorder.configuration.DomainsBigEnough
 	addresses := make([]string, 0, BigEnough)
 
 	defer func() {
