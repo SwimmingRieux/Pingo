@@ -29,7 +29,7 @@ func (organizer *ConfigsOrganizer) Organize(groupId int, domainsCountLimit int) 
 		return err
 	}
 
-	listeners, err := organizer.listenerProvider.GetListeners(configs)
+	listeners, err := organizer.listenerProvider.GetListeners(len(configs))
 	if err != nil {
 		return err
 	}
