@@ -19,6 +19,7 @@
     "ports_count_limit": 20,
     "pinger_goroutines_max": 10,
     "listener_iteration_limit": 1000,
+    "domains_big_enough": 15,
     "v2": {
       "config_path": "/path/to/configs/v2"
     }
