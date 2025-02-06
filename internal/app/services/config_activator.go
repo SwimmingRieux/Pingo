@@ -3,6 +3,6 @@ package services
 type ConfigActivator struct {
 }
 
-func (*ConfigActivator) Activate(path string) error {
-
+func (c *ConfigActivator) Activate(path string) error {
+	return nil
 }
