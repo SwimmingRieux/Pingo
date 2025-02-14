@@ -24,6 +24,7 @@ func NewConfigCollectionPinger(pinger abstraction.ConfigPinger, configuration co
 }
 
 func (s *ConfigCollectionPinger) PingAllConfigs(configs []entities.Config, domainsWithRank []structs.DomainWithRank, wg *sync.WaitGroup, listeners []net.Listener, configScoresMap *sync.Map) {
+
 	maxGoroutines := s.configuration.PingerGoroutinesMax
 	semaphore := make(chan struct{}, maxGoroutines)
 

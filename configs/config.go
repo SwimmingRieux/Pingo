@@ -32,6 +32,7 @@ type Errors struct {
 	ConfigRemoveError      string `mapstructure:"config_remove_error"`
 	InvalidFormatter       string `mapstructure:"invalid_formatter"`
 	InvalidPortSetter      string `mapstructure:"invalid_port_setter"`
+	ListenersCountError    string `mapstructure:"listeners_count_error"`
 }
 
 type V2 struct {
