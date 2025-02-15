@@ -22,8 +22,8 @@ type ConfigCreator struct {
 	loader           abstraction.UrlLoader
 	extractor        abstraction.ConfigsExtractor
 	writer           abstraction.ConfigsWriter
-	configRepository repository.ConfigRepository
-	groupRepository  repository.GroupRepository
+	configRepository repository.RepositoryConfigCreator
+	groupRepository  repository.RepositoryGroupCreator
 	configuration    configs.Configuration
 	formatterFactory abstraction.FormatterFactory
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type DomainRankFetcher struct {
-	domainRepository repository.DomainRepository
+	domainRepository repository.RepositoryDomainRetriever
 }
 
 func (s *DomainRankFetcher) GetDomainsWithRank(domainsCountLimit int) ([]structs.DomainWithRank, error) {

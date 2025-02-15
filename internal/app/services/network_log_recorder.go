@@ -12,7 +12,7 @@ import (
 )
 
 type NetworkLogRecorder struct {
-	domainRepository repository.DomainRepository
+	domainRepository repository.RepositoryDomainAdder
 	configuration    configs.Configuration
 }
 

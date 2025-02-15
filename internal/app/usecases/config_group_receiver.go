@@ -6,7 +6,7 @@ import (
 )
 
 type ConfigGroupReceiver struct {
-	repository repository.GroupRepository
+	repository repository.RepositoryGroupRetriever
 }
 
 func (receiver *ConfigGroupReceiver) Get(id int) (entities.Group, error) {

@@ -5,7 +5,7 @@ import (
 )
 
 type LogReceiver struct {
-	domainRepository repository.DomainRepository
+	domainRepository repository.RepositoryDomainRetriever
 }
 
 func (receiver *LogReceiver) GetDomains(limit int) ([]string, error) {

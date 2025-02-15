@@ -9,12 +9,13 @@ import (
 )
 
 type ConfigRemover struct {
-	configRepository repository.ConfigRepository
-	configuration    configs.Configuration
+	repositoryConfigDeleter   repository.RepositoryConfigDeleter
+	repositoryConfigRetriever repository.RepositoryConfigRetriever
+	configuration             configs.Configuration
 }
 
 func (remover *ConfigRemover) Remove(id int) error {
-	config, err := remover.configRepository.GetConfig(id)
+	config, err := remover.repositoryConfigRetriever.GetConfig(id)
 	if err != nil {
 		errText := remover.configuration.Errors.ConfigNotFound
 		return fmt.Errorf("%v %w", errText, err)
@@ -22,7 +23,7 @@ func (remover *ConfigRemover) Remove(id int) error {
 	defaultPath := remover.configuration.V2.ConfigurationPath
 	filePath := filepath.Join(defaultPath, config.Path)
 
-	if err = remover.configRepository.DeleteConfig(id); err != nil {
+	if err = remover.repositoryConfigDeleter.DeleteConfig(id); err != nil {
 		errText := remover.configuration.Errors.FileRemoveError
 		return fmt.Errorf("%v %v %w", errText, config.Path, err)
 	}
