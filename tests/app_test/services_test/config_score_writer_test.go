@@ -24,7 +24,7 @@ type scoreWriterTest struct {
 	expectedConfigDto []dtos.UpdateConfigDto
 }
 
-var testCases = []scoreWriterTest{
+var scoreWriterTests = []scoreWriterTest{
 	{
 		name:              "should not update any configurations when no configurations are provided",
 		configs:           []entities.Config{},
@@ -81,8 +81,9 @@ var testCases = []scoreWriterTest{
 
 func TestWriteScoresToDb(t *testing.T) {
 	t.Parallel()
-	for _, testCase := range testCases {
+	for _, testCase := range scoreWriterTests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			mockConfigRepository := new(MockConfigRepository)
 			service := services.NewConfigScoreWriter(mockConfigRepository)

@@ -19,8 +19,6 @@ func (m *MockConfigPinger) Ping(config entities.Config, domain structs.DomainWit
 	m.Called(config, domain, listener, configScoresMap)
 }
 
-var realConfig, _ = configurations.NewConfig()
-
 var pingAllConfigTests = []pingAllConfigTest{
 	{
 		name:         "should call ConfigPinger.Ping() exactly once for each pair of (config,domain) when parameters are valid",
@@ -46,15 +44,18 @@ var pingAllConfigTests = []pingAllConfigTest{
 }
 
 func TestPingAllConfigs(t *testing.T) {
+
+	var realConfig, _ = configurations.NewConfig()
 	t.Parallel()
 	for _, testCase := range pingAllConfigTests {
 		t.Run(testCase.name, func(t *testing.T) {
-			testCase.testFunction(t, testCase.configs, testCase.domains, testCase.listeners)
+			t.Parallel()
+			testCase.testFunction(t, testCase.configs, testCase.domains, testCase.listeners, realConfig)
 		})
 	}
 }
 
-func PingAllConfigsCallEachPairOnceWhenParametersAreValid(t *testing.T, configs []entities.Config, domains []structs.DomainWithRank, listeners []net.Listener) {
+func PingAllConfigsCallEachPairOnceWhenParametersAreValid(t *testing.T, configs []entities.Config, domains []structs.DomainWithRank, listeners []net.Listener, realConfig *configurations.Configuration) {
 	// Arrange
 	mockConfigPinger := new(MockConfigPinger)
 	for _, config := range configs {
@@ -63,7 +64,7 @@ func PingAllConfigsCallEachPairOnceWhenParametersAreValid(t *testing.T, configs 
 		}
 	}
 
-	service := services.NewConfigCollectionPinger(mockConfigPinger, *realConfig)
+	service := services.NewConfigCollectionPinger(mockConfigPinger, realConfig)
 
 	configScoresMap := &sync.Map{}
 	var wg sync.WaitGroup
@@ -80,5 +81,5 @@ type pingAllConfigTest struct {
 	configs      []entities.Config
 	domains      []structs.DomainWithRank
 	listeners    []net.Listener
-	testFunction func(t *testing.T, configs []entities.Config, domains []structs.DomainWithRank, listeners []net.Listener)
+	testFunction func(t *testing.T, configs []entities.Config, domains []structs.DomainWithRank, listeners []net.Listener, realConfig *configurations.Configuration)
 }

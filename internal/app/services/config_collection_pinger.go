@@ -12,10 +12,10 @@ import (
 
 type ConfigCollectionPinger struct {
 	pinger        abstraction.ConfigPinger
-	configuration configs.Configuration
+	configuration *configs.Configuration
 }
 
-func NewConfigCollectionPinger(pinger abstraction.ConfigPinger, configuration configs.Configuration) *ConfigCollectionPinger {
+func NewConfigCollectionPinger(pinger abstraction.ConfigPinger, configuration *configs.Configuration) *ConfigCollectionPinger {
 	configCollectionPinger := &ConfigCollectionPinger{
 		pinger:        pinger,
 		configuration: configuration,
