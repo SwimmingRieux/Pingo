@@ -13,7 +13,11 @@ import (
 
 type NetworkLogRecorder struct {
 	domainRepository repository.RepositoryDomainAdder
-	configuration    configs.Configuration
+	configuration    *configs.Configuration
+}
+
+func NewNetworkLogRecorder(domainRepository repository.RepositoryDomainAdder, configuration *configs.Configuration) *NetworkLogRecorder {
+	return &NetworkLogRecorder{configuration: configuration, domainRepository: domainRepository}
 }
 
 func (recorder *NetworkLogRecorder) Record(context context.Context) {
