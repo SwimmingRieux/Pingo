@@ -105,3 +105,4 @@ func TestRecord(t *testing.T) {
 // todo: how to use the areParallel thing?
 // todo: what happens to context? shouldn't we close it?
 // todo: think about how are we using t.parallel and is it correct?
+// todo: place realConfig in one file and use it everywhere

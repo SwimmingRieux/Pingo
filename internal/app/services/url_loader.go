@@ -8,7 +8,11 @@ import (
 )
 
 type UrlLoader struct {
-	configuration configs.Configuration
+	configuration *configs.Configuration
+}
+
+func NewUrlLoader(configuration *configs.Configuration) *UrlLoader {
+	return &UrlLoader{configuration: configuration}
 }
 
 func (loader *UrlLoader) Load(url string) (string, error) {
