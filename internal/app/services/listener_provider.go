@@ -7,7 +7,11 @@ import (
 )
 
 type ListenerProvider struct {
-	configuration configs.Configuration
+	configuration *configs.Configuration
+}
+
+func NewListenerProvider(configuration *configs.Configuration) *ListenerProvider {
+	return &ListenerProvider{configuration: configuration}
 }
 
 func (s *ListenerProvider) GetListeners(configsLength int) ([]net.Listener, error) {
