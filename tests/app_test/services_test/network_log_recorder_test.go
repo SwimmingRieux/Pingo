@@ -2,9 +2,15 @@ package services_test
 
 import (
 	"context"
+	"fmt"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/stretchr/testify/mock"
+	"net"
+	"os"
 	"pingo/configs"
 	"pingo/internal/app/services"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -13,15 +19,58 @@ type MockRepositoryDomainAdder struct {
 	mock.Mock
 }
 
-func (mock *MockRepositoryDomainAdder) AddDomains(addresses []string) {
-	for _, addr := range addresses {
-		mock.Called(addr)
+func (mock *MockRepositoryDomainAdder) AddDomain(address string) {
+	mock.Called(address)
+}
+
+type MockPacketSource struct {
+	packets chan gopacket.Packet
+}
+
+func (mock *MockPacketSource) Packets() chan gopacket.Packet {
+	return mock.packets
+}
+
+func generateMockPacket(dstIP string) gopacket.Packet {
+	envDstPort, _ := strconv.Atoi(os.Getenv("PINGO_DEFAULT_PORT"))
+	dstPort := uint16(envDstPort)
+
+	ethernetLayer := &layers.Ethernet{
+		SrcMAC:       net.HardwareAddr{0x00, 0x0c, 0x29, 0x3e, 0x5b, 0xf2},
+		DstMAC:       net.HardwareAddr{0x00, 0x0c, 0x29, 0x3e, 0x5b, 0xf3},
+		EthernetType: layers.EthernetTypeIPv4,
 	}
+
+	ipLayer := &layers.IPv4{
+		SrcIP:    net.IP{127, 0, 0, 1},
+		DstIP:    net.ParseIP(dstIP),
+		Version:  4,
+		TTL:      64,
+		Protocol: layers.IPProtocolTCP,
+	}
+
+	tcpLayer := &layers.TCP{
+		SrcPort: layers.TCPPort(12345),
+		DstPort: layers.TCPPort(dstPort),
+	}
+
+	tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+
+	buffer := gopacket.NewSerializeBuffer()
+	options := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
+
+	err := gopacket.SerializeLayers(buffer, options,
+		ethernetLayer, ipLayer, tcpLayer,
+	)
+	if err != nil {
+		return nil
+	}
+
+	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 
 type networkLogRecorderTest struct {
 	name            string
-	areParallel     bool
 	networkRequests []string
 }
 
@@ -29,21 +78,11 @@ var configForNetworkLogRecorderTest, _ = configs.NewConfig()
 
 var testCases = []networkLogRecorderTest{
 	{
-		name:        "should record logs when multiple sequential requests are sent",
-		areParallel: false,
+		name: "should record logs when multiple requests are sent",
 		networkRequests: []string{
 			"192.168.1.1",
 			"192.168.1.2",
 			"192.168.1.3",
-		},
-	},
-	{
-		name:        "should record logs when parallel requests are sent",
-		areParallel: true,
-		networkRequests: []string{
-			"10.0.0.1",
-			"10.0.0.2",
-			"10.0.0.3",
 		},
 	},
 }
@@ -52,18 +91,11 @@ func addOtherTestCases() {
 	bigEnough := configForNetworkLogRecorderTest.DomainsBigEnough
 	largeNetworkRequests := make([]string, 0, bigEnough*2)
 	for i := 0; i < bigEnough*2; i++ {
-		largeNetworkRequests = append(largeNetworkRequests, "172.16.0."+string(rune(i%255)))
+		largeNetworkRequests = append(largeNetworkRequests, fmt.Sprintf("172.16.0.%v", i%255))
 	}
 
 	testCases = append(testCases, networkLogRecorderTest{
-		name:            "should record logs when requests exceed twice the BigEnough limit and sent consequentially",
-		areParallel:     false,
-		networkRequests: largeNetworkRequests,
-	})
-
-	testCases = append(testCases, networkLogRecorderTest{
-		name:            "should record logs when requests exceed twice the BigEnough limit and sent in parallel",
-		areParallel:     true,
+		name:            "should record logs when requests exceed twice the BigEnough limit",
 		networkRequests: largeNetworkRequests,
 	})
 
@@ -74,35 +106,34 @@ func TestRecord(t *testing.T) {
 	t.Parallel()
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			// Assert
+			t.Parallel()
+			// Arrange
 			mockRepo := new(MockRepositoryDomainAdder)
-			recorder := services.NewNetworkLogRecorder(mockRepo, configForNetworkLogRecorderTest)
+			mockPacketSource := &MockPacketSource{packets: make(chan gopacket.Packet, 10)}
+			recorder := services.NewNetworkLogRecorder(mockRepo, configForNetworkLogRecorderTest, mockPacketSource)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-
-			mockRepo.On("AddDomains", mock.Anything).Return()
 
 			expectedAddresses := testCase.networkRequests
 			for _, addr := range expectedAddresses {
-				mockRepo.On("AddDomains", addr).Once()
+				mockRepo.On("AddDomain", addr).Once()
 			}
 
 			// Act
 			go recorder.Record(ctx)
 
-			// Simulate network requests (requires actual packet injection setup)
+			for _, request := range testCase.networkRequests {
+				generatedPacket := generateMockPacket(request)
+				mockPacketSource.packets <- generatedPacket
+			}
 
+			time.Sleep(5 * time.Second)
+			cancel()
 			// Assert
-			time.Sleep(1 * time.Second)
 			mockRepo.AssertExpectations(t)
 		})
 	}
 }
 
-// todo: send actual requests
-// todo: don't use time.Sleep if you can
-// todo: how to use the areParallel thing?
-// todo: what happens to context? shouldn't we close it?
-// todo: think about how are we using t.parallel and is it correct?
 // todo: place realConfig in one file and use it everywhere

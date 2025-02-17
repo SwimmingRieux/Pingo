@@ -3,56 +3,60 @@ package services
 import (
 	"context"
 	"fmt"
-	"os"
-	"pingo/configs"
-	"pingo/internal/domain/repository"
-
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
+	"os"
+	"pingo/configs"
+	"pingo/internal/app/services/abstraction"
+	"pingo/internal/domain/repository"
 )
 
 type NetworkLogRecorder struct {
 	domainRepository repository.RepositoryDomainAdder
 	configuration    *configs.Configuration
+	packetSource     abstraction.PacketSource
 }
 
-func NewNetworkLogRecorder(domainRepository repository.RepositoryDomainAdder, configuration *configs.Configuration) *NetworkLogRecorder {
-	return &NetworkLogRecorder{configuration: configuration, domainRepository: domainRepository}
+func NewNetworkLogRecorder(
+	domainRepository repository.RepositoryDomainAdder,
+	configuration *configs.Configuration,
+	packetSource abstraction.PacketSource,
+) *NetworkLogRecorder {
+	return &NetworkLogRecorder{
+		configuration:    configuration,
+		domainRepository: domainRepository,
+		packetSource:     packetSource,
+	}
 }
 
-func (recorder *NetworkLogRecorder) Record(context context.Context) {
+func NewNetworkLogRecorderLive(domainRepository repository.RepositoryDomainAdder, configuration *configs.Configuration) (*NetworkLogRecorder, error) {
 	deviceName := os.Getenv("PINGO_DEFAULT_RECORDING_DEVICE")
 	mainPort := os.Getenv("PINGO_DEFAULT_PORT")
+
 	handle, err := pcap.OpenLive(deviceName, 1600, true, pcap.BlockForever)
 	if err != nil {
-		return
+		return nil, err
 	}
-	defer handle.Close()
 
 	err = handle.SetBPFFilter(fmt.Sprintf("host 127.0.0.1 and port %v", mainPort))
 	if err != nil {
-		return
+		handle.Close()
+		return nil, err
 	}
 
-	var BigEnough = recorder.configuration.DomainsBigEnough
-	addresses := make([]string, 0, BigEnough)
-
-	defer func() {
-		recorder.domainRepository.AddDomains(addresses)
-	}()
-
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	return NewNetworkLogRecorder(domainRepository, configuration, packetSource), nil
+}
+
+func (recorder *NetworkLogRecorder) Record(context context.Context) {
+
 	for {
 		select {
-		case packet := <-packetSource.Packets():
+		case packet := <-recorder.packetSource.Packets():
 			networkLayer := packet.NetworkLayer()
 			if networkLayer != nil {
 				dst := networkLayer.NetworkFlow().Dst().String()
-				addresses = append(addresses, dst)
-				if len(addresses) == BigEnough {
-					recorder.domainRepository.AddDomains(addresses)
-					addresses = addresses[:0]
-				}
+				recorder.domainRepository.AddDomain(dst)
 			}
 		case <-context.Done():
 			return
