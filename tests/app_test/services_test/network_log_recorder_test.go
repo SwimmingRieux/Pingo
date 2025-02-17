@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"net"
 	"os"
-	"pingo/configs"
 	"pingo/internal/app/services"
 	"strconv"
 	"testing"
@@ -74,8 +73,6 @@ type networkLogRecorderTest struct {
 	networkRequests []string
 }
 
-var configForNetworkLogRecorderTest, _ = configs.NewConfig()
-
 var testCases = []networkLogRecorderTest{
 	{
 		name: "should record logs when multiple requests are sent",
@@ -88,7 +85,7 @@ var testCases = []networkLogRecorderTest{
 }
 
 func addOtherTestCases() {
-	bigEnough := configForNetworkLogRecorderTest.DomainsBigEnough
+	bigEnough := ConfigForTest.DomainsBigEnough
 	largeNetworkRequests := make([]string, 0, bigEnough*2)
 	for i := 0; i < bigEnough*2; i++ {
 		largeNetworkRequests = append(largeNetworkRequests, fmt.Sprintf("172.16.0.%v", i%255))
@@ -110,7 +107,7 @@ func TestRecord(t *testing.T) {
 			// Arrange
 			mockRepo := new(MockRepositoryDomainAdder)
 			mockPacketSource := &MockPacketSource{packets: make(chan gopacket.Packet, 10)}
-			recorder := services.NewNetworkLogRecorder(mockRepo, configForNetworkLogRecorderTest, mockPacketSource)
+			recorder := services.NewNetworkLogRecorder(mockRepo, ConfigForTest, mockPacketSource)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -135,5 +132,3 @@ func TestRecord(t *testing.T) {
 		})
 	}
 }
-
-// todo: place realConfig in one file and use it everywhere

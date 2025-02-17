@@ -2,7 +2,6 @@ package services_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"pingo/configs"
 	"pingo/internal/app/services"
 	"testing"
 )
@@ -26,8 +25,6 @@ var listenerProviderTests = []listenerProviderTest{
 	},
 }
 
-var configForListenerProviderTest, _ = configs.NewConfig()
-
 func TestListenerProvider(t *testing.T) {
 	t.Parallel()
 	for _, testCase := range listenerProviderTests {
@@ -40,7 +37,7 @@ func TestListenerProvider(t *testing.T) {
 
 func listenerProviderSuccessfulTest(t *testing.T, configsLength int) {
 	// Arrange
-	provider := services.NewListenerProvider(configForListenerProviderTest)
+	provider := services.NewListenerProvider(ConfigForTest)
 	// Act
 	listeners, err := provider.GetListeners(configsLength)
 
@@ -56,12 +53,12 @@ func listenerProviderSuccessfulTest(t *testing.T, configsLength int) {
 
 func listenerProviderFailedTest(t *testing.T, configsLength int) {
 	// Arrange
-	provider := services.NewListenerProvider(configForListenerProviderTest)
+	provider := services.NewListenerProvider(ConfigForTest)
 	// Act
 	listeners, err := provider.GetListeners(configsLength)
 
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, listeners)
-	assert.EqualError(t, err, configForListenerProviderTest.Errors.NotEnoughPortsFound)
+	assert.EqualError(t, err, ConfigForTest.Errors.NotEnoughPortsFound)
 }

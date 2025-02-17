@@ -3,12 +3,9 @@ package services_test
 import (
 	"github.com/stretchr/testify/assert"
 	"os"
-	"pingo/configs"
 	"pingo/internal/app/services"
 	"testing"
 )
-
-var configForFileWriterTest, _ = configs.NewConfig()
 
 type configsFileWriterTest struct {
 	name                       string
@@ -30,14 +27,14 @@ var configsFileWriterTests = []configsFileWriterTest{
 		name:                       "should return error when path is empty",
 		jsonConfig:                 `{"key": "value"}`,
 		path:                       "",
-		expectedContainedErrorText: configForFileWriterTest.Errors.FileCreatingError,
+		expectedContainedErrorText: ConfigForTest.Errors.FileCreatingError,
 		testFunction:               ConfigFileWriterFailedTest,
 	},
 	{
 		name:                       "should return error when path is invalid (e.g., directory does not exist)",
 		jsonConfig:                 `{"key": "value"}`,
 		path:                       "/nonexistent_directory_nsdjfAFBNKDaaefb/test_config.json",
-		expectedContainedErrorText: configForFileWriterTest.Errors.FileCreatingError,
+		expectedContainedErrorText: ConfigForTest.Errors.FileCreatingError,
 		testFunction:               ConfigFileWriterFailedTest,
 	},
 }
@@ -54,7 +51,7 @@ func TestConfigsFileWriter(t *testing.T) {
 
 func ConfigFileWriterFailedTest(t *testing.T, jsonConfig string, path string, expectedContainedErrorText string) {
 	// Arrange
-	service := services.NewConfigsWriter(configForFileWriterTest)
+	service := services.NewConfigsWriter(ConfigForTest)
 	// Act
 	err := service.Write(jsonConfig, path)
 	// Assert
@@ -63,7 +60,7 @@ func ConfigFileWriterFailedTest(t *testing.T, jsonConfig string, path string, ex
 
 func ConfigsFileWriterSuccessfulTest(t *testing.T, jsonConfig string, path string, expectedContainedErrorText string) {
 	// Arrange
-	service := services.NewConfigsWriter(configForFileWriterTest)
+	service := services.NewConfigsWriter(ConfigForTest)
 	// Act
 	err := service.Write(jsonConfig, path)
 	// Assert

@@ -5,12 +5,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
-	"pingo/configs"
 	"pingo/internal/app/services"
 	"testing"
 )
-
-var configForUrlLoaderTest, _ = configs.NewConfig()
 
 type urlLoaderOkResponseTest struct {
 	name         string
@@ -75,7 +72,7 @@ func urlLoaderValidTest(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	loader := services.NewUrlLoader(configForUrlLoaderTest)
+	loader := services.NewUrlLoader(ConfigForTest)
 
 	// Act
 	result, err := loader.Load(mockServer.URL)
@@ -97,7 +94,7 @@ func urlLoaderCantReadTest(t *testing.T) {
 	}))
 	defer mockServer.Close()
 
-	loader := services.NewUrlLoader(configForUrlLoaderTest)
+	loader := services.NewUrlLoader(ConfigForTest)
 
 	// Act
 	_, err := loader.Load(mockServer.URL)
@@ -114,7 +111,7 @@ func urlLoaderReturnsBadResponseTest(t *testing.T, responseCode int) {
 	}))
 	defer mockServer.Close()
 
-	loader := services.NewUrlLoader(configForUrlLoaderTest)
+	loader := services.NewUrlLoader(ConfigForTest)
 
 	// Act
 	_, err := loader.Load(mockServer.URL)
@@ -123,6 +120,6 @@ func urlLoaderReturnsBadResponseTest(t *testing.T, responseCode int) {
 	if err == nil {
 		t.Fatalf("expected an error but got none")
 	}
-	expectedError := fmt.Errorf("%v %v", configForUrlLoaderTest.Errors.HttpStatus, responseCode)
+	expectedError := fmt.Errorf("%v %v", ConfigForTest.Errors.HttpStatus, responseCode)
 	assert.EqualError(t, expectedError, err.Error())
 }
