@@ -7,7 +7,11 @@ import (
 )
 
 type ConfigsWriter struct {
-	configuration configs.Configuration
+	configuration *configs.Configuration
+}
+
+func NewConfigsWriter(configuration *configs.Configuration) *ConfigsWriter {
+	return &ConfigsWriter{configuration: configuration}
 }
 
 func (writer *ConfigsWriter) Write(jsonConfig string, path string) error {

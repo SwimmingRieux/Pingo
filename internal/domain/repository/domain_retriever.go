@@ -2,7 +2,6 @@ package repository
 
 import "pingo/internal/domain/entities"
 
-type DomainRepository interface {
+type RepositoryDomainRetriever interface {
 	GetDomains(limit int) ([]entities.Domain, error)
-	AddDomains(domains []string)
 }

@@ -22,8 +22,8 @@ type ConfigCreator struct {
 	loader           abstraction.UrlLoader
 	extractor        abstraction.ConfigsExtractor
 	writer           abstraction.ConfigsWriter
-	configRepository repository.ConfigRepository
-	groupRepository  repository.GroupRepository
+	configRepository repository.RepositoryConfigCreator
+	groupRepository  repository.RepositoryGroupCreator
 	configuration    configs.Configuration
 	formatterFactory abstraction.FormatterFactory
 }
@@ -86,18 +86,17 @@ func (creator *ConfigCreator) Create(input string) error {
 	}
 
 	for i, formattedConfig := range formattedConfigs {
-
 		wg.Add(1)
-		go func() {
+		go func(i int, formattedConfig FormattedConfigAndType) {
 			defer wg.Done()
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 			configPath := path.Join(groupPath, strconv.Itoa(i))
-			err = creator.writer.Write(formattedConfig.FormattedConfig, configPath)
+			err := creator.writer.Write(formattedConfig.FormattedConfig, configPath)
 			if err == nil {
 				creator.configRepository.CreateConfig(newGroupId, configPath, formattedConfig.Type)
 			}
-		}()
+		}(i, formattedConfig)
 	}
 	wg.Wait()
 

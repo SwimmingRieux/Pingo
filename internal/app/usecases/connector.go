@@ -7,7 +7,7 @@ import (
 )
 
 type Connector struct {
-	configRepository repository.ConfigRepository
+	configRepository repository.RepositoryConfigRetriever
 	configActivator  abstraction.ConfigActivator
 	recorder         abstraction.NetworkLogRecorder
 	cancelFunc       context.CancelFunc

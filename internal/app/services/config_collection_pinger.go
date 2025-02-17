@@ -12,22 +12,31 @@ import (
 
 type ConfigCollectionPinger struct {
 	pinger        abstraction.ConfigPinger
-	configuration configs.Configuration
+	configuration *configs.Configuration
+}
+
+func NewConfigCollectionPinger(pinger abstraction.ConfigPinger, configuration *configs.Configuration) *ConfigCollectionPinger {
+	configCollectionPinger := &ConfigCollectionPinger{
+		pinger:        pinger,
+		configuration: configuration,
+	}
+	return configCollectionPinger
 }
 
 func (s *ConfigCollectionPinger) PingAllConfigs(configs []entities.Config, domainsWithRank []structs.DomainWithRank, wg *sync.WaitGroup, listeners []net.Listener, configScoresMap *sync.Map) {
+
 	maxGoroutines := s.configuration.PingerGoroutinesMax
 	semaphore := make(chan struct{}, maxGoroutines)
 
 	for i, config := range configs {
 		for _, domain := range domainsWithRank {
 			wg.Add(1)
-			go func() {
+			go func(config entities.Config, domain structs.DomainWithRank, listener net.Listener) {
 				defer wg.Done()
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
-				s.pinger.Ping(config, domain, listeners[i], configScoresMap)
-			}()
+				s.pinger.Ping(config, domain, listener, configScoresMap)
+			}(config, domain, listeners[i])
 		}
 	}
 }

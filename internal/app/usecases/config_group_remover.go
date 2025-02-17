@@ -5,7 +5,7 @@ import (
 )
 
 type ConfigGroupRemover struct {
-	groupRepository repository.GroupRepository
+	groupRepository repository.RepositoryGroupDeleter
 }
 
 func (remover *ConfigGroupRemover) Remove(id int) error {

@@ -11,7 +11,7 @@ import (
 )
 
 type ConfigsOrganizer struct {
-	groupRepository repository.GroupRepository
+	groupRepository repository.RepositoryConfigsRetriever
 
 	portSetterFactory abstraction.PortSetterFactory
 	configuration     configs.Configuration
