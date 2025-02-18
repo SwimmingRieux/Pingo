@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -52,7 +53,8 @@ func NewConfig() (*Configuration, error) {
 	viperConfig.SetConfigFile(path)
 	viperConfig.AutomaticEnv()
 	if err := viperConfig.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
 			return nil, fmt.Errorf("config file not found %w", err)
 		}
 		return nil, err

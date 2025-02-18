@@ -53,7 +53,10 @@ func generateMockPacket(dstIP string) gopacket.Packet {
 		DstPort: layers.TCPPort(dstPort),
 	}
 
-	tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+	err := tcpLayer.SetNetworkLayerForChecksum(ipLayer)
+	if err != nil {
+		return nil
+	}
 
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}

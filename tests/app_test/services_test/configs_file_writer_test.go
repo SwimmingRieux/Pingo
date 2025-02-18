@@ -55,7 +55,7 @@ func ConfigFileWriterFailedTest(t *testing.T, jsonConfig string, path string, ex
 	// Act
 	err := service.Write(jsonConfig, path)
 	// Assert
-	assert.Contains(t, err.Error(), expectedContainedErrorText)
+	assert.ErrorContains(t, err, expectedContainedErrorText)
 }
 
 func ConfigsFileWriterSuccessfulTest(t *testing.T, jsonConfig string, path string, expectedContainedErrorText string) {
