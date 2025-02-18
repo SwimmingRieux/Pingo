@@ -44,7 +44,7 @@ func getDefaultConfig() string {
 }
 
 func NewConfig() (*Configuration, error) {
-	path := os.Getenv("cfgPath")
+	path := os.Getenv("CFG_PATH")
 	if path == "" {
 		path = getDefaultConfig()
 	}

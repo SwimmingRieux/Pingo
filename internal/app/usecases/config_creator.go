@@ -77,8 +77,10 @@ func (creator *ConfigCreator) Create(input string) error {
 		return fmt.Errorf("%v %w", errText, err)
 	}
 
+	pingoPath := os.Getenv("PINGO_PATH")
 	v2ConfigsPath := creator.configuration.V2.ConfigurationPath
-	groupPath := path.Join(v2ConfigsPath, groupName)
+
+	groupPath := path.Join(pingoPath, v2ConfigsPath, groupName)
 	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
 		errText := creator.configuration.Errors.DirectoryCreatingError

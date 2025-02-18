@@ -22,7 +22,7 @@
     "listener_iteration_limit": 1000,
     "domains_big_enough": 15,
     "v2": {
-      "config_path": "/path/to/configs/v2"
+      "config_path": "v2_configurations"
     }
   }
   
