@@ -51,7 +51,7 @@ func TestConfigsFileWriter(t *testing.T) {
 
 func ConfigFileWriterFailedTest(t *testing.T, jsonConfig string, path string, expectedContainedErrorText string) {
 	// Arrange
-	service := services.NewConfigsWriter(ConfigForTest)
+	service := services.NewConfigFileWriter(ConfigForTest)
 	// Act
 	err := service.Write(jsonConfig, path)
 	// Assert
@@ -60,7 +60,7 @@ func ConfigFileWriterFailedTest(t *testing.T, jsonConfig string, path string, ex
 
 func ConfigsFileWriterSuccessfulTest(t *testing.T, jsonConfig string, path string, expectedContainedErrorText string) {
 	// Arrange
-	service := services.NewConfigsWriter(ConfigForTest)
+	service := services.NewConfigFileWriter(ConfigForTest)
 	// Act
 	err := service.Write(jsonConfig, path)
 	// Assert

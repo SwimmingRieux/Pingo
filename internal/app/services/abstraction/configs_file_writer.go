@@ -1,5 +1,5 @@
 package abstraction
 
-type ConfigsWriter interface {
+type ConfigFileWriter interface {
 	Write(jsonConfig string, path string) error
 }

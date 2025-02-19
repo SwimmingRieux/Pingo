@@ -11,9 +11,17 @@ import (
 )
 
 type ConfigCollectionFileWriter struct {
-	writer           abstraction.ConfigsWriter
+	singleFileWriter abstraction.ConfigFileWriter
 	configRepository repository.RepositoryConfigCreator
 	configuration    *configs.Configuration
+}
+
+func NewConfigCollectionFileWriter(singleFileWriter abstraction.ConfigFileWriter, configRepository repository.RepositoryConfigCreator, configuration *configs.Configuration) *ConfigCollectionFileWriter {
+	return &ConfigCollectionFileWriter{
+		singleFileWriter: singleFileWriter,
+		configRepository: configRepository,
+		configuration:    configuration,
+	}
 }
 
 func (collectionWriter *ConfigCollectionFileWriter) WriteConfigsToFiles(formattedConfigs []structs.FormattedConfigAndType, wg *sync.WaitGroup,
@@ -29,7 +37,7 @@ func (collectionWriter *ConfigCollectionFileWriter) WriteConfigsToFiles(formatte
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 			configPath := path.Join(groupPath, strconv.Itoa(i))
-			err := collectionWriter.writer.Write(formattedConfig.FormattedConfig, configPath)
+			err := collectionWriter.singleFileWriter.Write(formattedConfig.FormattedConfig, configPath)
 			if err == nil {
 				collectionWriter.configRepository.CreateConfig(newGroupId, configPath, formattedConfig.Type)
 			}
