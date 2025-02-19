@@ -61,7 +61,7 @@ func generateMockPacket(dstIP string) gopacket.Packet {
 	buffer := gopacket.NewSerializeBuffer()
 	options := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 
-	err := gopacket.SerializeLayers(buffer, options,
+	err = gopacket.SerializeLayers(buffer, options,
 		ethernetLayer, ipLayer, tcpLayer,
 	)
 	if err != nil {

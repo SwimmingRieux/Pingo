@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"fmt"
+	"log"
 	"net"
 	configurations "pingo/configs"
 	"pingo/internal/app/services/abstraction"
@@ -14,12 +15,27 @@ type ConfigsOrganizer struct {
 	groupRepository repository.RepositoryConfigsRetriever
 
 	portSetterFactory abstraction.PortSetterFactory
-	configuration     configurations.Configuration
+	configuration     *configurations.Configuration
 
 	configScoreWriter abstraction.ConfigScoreWriter
 	configPinger      abstraction.ConfigCollectionPinger
 	domainRankFetcher abstraction.DomainRankFetcher
 	listenerProvider  abstraction.ListenerProvider
+}
+
+func NewConfigsOrganizer(groupRepository repository.RepositoryConfigsRetriever,
+	portSetterFactory abstraction.PortSetterFactory, configuration *configurations.Configuration,
+	configScoreWriter abstraction.ConfigScoreWriter, configPinger abstraction.ConfigCollectionPinger,
+	domainRankFetcher abstraction.DomainRankFetcher, listenerProvider abstraction.ListenerProvider) *ConfigsOrganizer {
+	return &ConfigsOrganizer{
+		groupRepository:   groupRepository,
+		portSetterFactory: portSetterFactory,
+		configuration:     configuration,
+		configScoreWriter: configScoreWriter,
+		configPinger:      configPinger,
+		domainRankFetcher: domainRankFetcher,
+		listenerProvider:  listenerProvider,
+	}
 }
 
 func (organizer *ConfigsOrganizer) Organize(groupId int, domainsCountLimit int) error {
@@ -70,7 +86,9 @@ func (organizer *ConfigsOrganizer) setPortOnConfigs(configs []entities.Config, l
 
 func (organizer *ConfigsOrganizer) closeAllListeners(listeners []net.Listener) {
 	for _, listener := range listeners {
-		listener.Close()
+		if err := listener.Close(); err != nil {
+			log.Printf("error closing listener: %s", err)
+		}
 	}
 }
 

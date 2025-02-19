@@ -114,10 +114,7 @@ func testRemoveSuccess(t *testing.T) {
 		t.Fatalf("Failed to create temporary file: %v", err)
 	}
 	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Fatalf("Failed to remove temporary file: %v", err)
-		}
+		os.Remove(name)
 	}(tempFile.Name())
 
 	remover := usecases.NewConfigRemover(mockDeleter, mockRetriever, ConfigForTest)
