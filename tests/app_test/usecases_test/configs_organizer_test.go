@@ -51,6 +51,7 @@ type MockListenerProvider struct {
 }
 
 func (m *MockListenerProvider) GetListeners(count int) ([]net.Listener, error) {
+	m.Called(count)
 	var listeners []net.Listener
 	for i := 0; i < count; i++ {
 		listeners = append(listeners, &MockNetListener{})
@@ -117,7 +118,7 @@ var configOrganizerTests = []configOrganizerTest{
 	{
 		name:              "should call mocks and do not return error when there are zero configs but multiple domainWithRanks",
 		domainsCountLimit: 5,
-		configs:           []entities.Config{}, // Zero configs
+		configs:           []entities.Config{},
 		domainsWithRank: []structs.DomainWithRank{
 			{Domain: entities.Domain{Address: "example.com"}, Rank: 1},
 			{Domain: entities.Domain{Address: "example.org"}, Rank: 2},
@@ -145,12 +146,15 @@ func successfulOrganizeTest(t *testing.T, testCase configOrganizerTest) {
 	mockConfigPinger := new(MockConfigPinger)
 	mockConfigScoreWriter := new(MockConfigScoreWriter)
 
-	mockRetriever.On("GetConfigs", 1).Return(testCase.configs, nil)
-	mockPortSetter.On("SetPort", mock.Anything, mock.Anything).Return(nil)
-	mockPortSetterFactory.On("Fetch", mock.Anything).Return(mockPortSetter, nil)
-	mockDomainRankFetcher.On("GetDomainsWithRank", testCase.domainsCountLimit).Return(testCase.domainsWithRank, nil)
-	mockConfigPinger.On("PingAllConfigs", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
-	mockConfigScoreWriter.On("WriteScoresToDb", mock.Anything, mock.Anything).Return()
+	mockRetriever.On("GetConfigs", 1).Return(testCase.configs, nil).Once()
+	mockListenerProvider.On("GetListeners", mock.Anything).Once()
+	if len(testCase.configs) > 0 {
+		mockPortSetterFactory.On("Fetch", mock.Anything).Return(mockPortSetter, nil).Times(len(testCase.configs))
+		mockPortSetter.On("SetPort", mock.Anything, mock.Anything).Return(nil).Times(len(testCase.configs))
+	}
+	mockDomainRankFetcher.On("GetDomainsWithRank", testCase.domainsCountLimit).Return(testCase.domainsWithRank, nil).Once()
+	mockConfigPinger.On("PingAllConfigs", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return().Once()
+	mockConfigScoreWriter.On("WriteScoresToDb", mock.Anything, mock.Anything).Return().Once()
 
 	organizer := usecases.NewConfigsOrganizer(mockRetriever, mockPortSetterFactory, ConfigForTest, mockConfigScoreWriter, mockConfigPinger, mockDomainRankFetcher, mockListenerProvider)
 
@@ -158,6 +162,13 @@ func successfulOrganizeTest(t *testing.T, testCase configOrganizerTest) {
 	err := organizer.Organize(1, testCase.domainsCountLimit)
 
 	// Assert
+	mockRetriever.AssertExpectations(t)
+	mockListenerProvider.AssertExpectations(t)
+	mockPortSetter.AssertExpectations(t)
+	mockPortSetterFactory.AssertExpectations(t)
+	mockDomainRankFetcher.AssertExpectations(t)
+	mockConfigPinger.AssertExpectations(t)
+	mockConfigScoreWriter.AssertExpectations(t)
 	assert.NoErrorf(t, err, fmt.Sprintf("%v", err))
 }
 
