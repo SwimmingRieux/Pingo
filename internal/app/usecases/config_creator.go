@@ -8,21 +8,15 @@ import (
 	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/repository"
-	"strconv"
+	"pingo/internal/domain/structs"
 	"strings"
 	"sync"
 )
 
-type FormattedConfigAndType struct {
-	FormattedConfig string
-	Type            string
-}
-
 type ConfigCreator struct {
 	loader           abstraction.UrlLoader
 	extractor        abstraction.ConfigsExtractor
-	writer           abstraction.ConfigsWriter
-	configRepository repository.RepositoryConfigCreator
+	collectionWriter abstraction.ConfigCollectionFileWriter
 	groupRepository  repository.RepositoryGroupCreator
 	configuration    configs.Configuration
 	formatterFactory abstraction.FormatterFactory
@@ -48,7 +42,7 @@ func (creator *ConfigCreator) Create(input string) error {
 		return errors.New(errText)
 	}
 
-	var formattedConfigs []FormattedConfigAndType
+	var formattedConfigs []structs.FormattedConfigAndType
 	for _, rawConfig := range rawConfigs {
 		configType := strings.Split(rawConfig, "://")[0]
 		formatter, err := creator.formatterFactory.Fetch(configType)
@@ -57,7 +51,7 @@ func (creator *ConfigCreator) Create(input string) error {
 		}
 
 		formattedConfig, err := formatter.Format(rawConfig)
-		formattedConfigAndType := FormattedConfigAndType{formattedConfig, configType}
+		formattedConfigAndType := structs.FormattedConfigAndType{FormattedConfig: formattedConfig, Type: configType}
 		if err == nil {
 			formattedConfigs = append(formattedConfigs, formattedConfigAndType)
 		}
@@ -66,10 +60,6 @@ func (creator *ConfigCreator) Create(input string) error {
 		errText := creator.configuration.Errors.ConfigFormatError
 		return errors.New(errText)
 	}
-
-	goroutinesMaxCount := creator.configuration.GoroutinesMax
-	semaphore := make(chan struct{}, goroutinesMaxCount)
-	var wg sync.WaitGroup
 
 	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
@@ -87,19 +77,8 @@ func (creator *ConfigCreator) Create(input string) error {
 		return fmt.Errorf("%v %w", errText, err)
 	}
 
-	for i, formattedConfig := range formattedConfigs {
-		wg.Add(1)
-		go func(i int, formattedConfig FormattedConfigAndType) {
-			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-			configPath := path.Join(groupPath, strconv.Itoa(i))
-			err := creator.writer.Write(formattedConfig.FormattedConfig, configPath)
-			if err == nil {
-				creator.configRepository.CreateConfig(newGroupId, configPath, formattedConfig.Type)
-			}
-		}(i, formattedConfig)
-	}
+	var wg sync.WaitGroup
+	creator.collectionWriter.WriteConfigsToFiles(formattedConfigs, &wg, groupPath, newGroupId)
 	wg.Wait()
 
 	return nil
