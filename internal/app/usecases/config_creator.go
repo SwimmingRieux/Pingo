@@ -17,8 +17,21 @@ type ConfigCreator struct {
 	extractor           abstraction.ConfigsExtractor
 	collectionWriter    abstraction.ConfigCollectionFileWriter
 	groupRepository     repository.RepositoryGroupCreator
-	configuration       configs.Configuration
+	configuration       *configs.Configuration
 	collectionFormatter abstraction.ConfigsCollectionFormatter
+}
+
+func NewConfigCreator(loader abstraction.UrlLoader, extractor abstraction.ConfigsExtractor,
+	collectionWriter abstraction.ConfigCollectionFileWriter, groupRepository repository.RepositoryGroupCreator,
+	configuration *configs.Configuration, collectionFormatter abstraction.ConfigsCollectionFormatter) *ConfigCreator {
+	return &ConfigCreator{
+		loader:              loader,
+		extractor:           extractor,
+		collectionWriter:    collectionWriter,
+		groupRepository:     groupRepository,
+		configuration:       configuration,
+		collectionFormatter: collectionFormatter,
+	}
 }
 
 func (creator *ConfigCreator) Create(input string) error {
