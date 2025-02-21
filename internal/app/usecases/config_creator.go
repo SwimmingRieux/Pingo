@@ -8,18 +8,17 @@ import (
 	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/repository"
-	"pingo/internal/domain/structs"
 	"strings"
 	"sync"
 )
 
 type ConfigCreator struct {
-	loader           abstraction.UrlLoader
-	extractor        abstraction.ConfigsExtractor
-	collectionWriter abstraction.ConfigCollectionFileWriter
-	groupRepository  repository.RepositoryGroupCreator
-	configuration    configs.Configuration
-	formatterFactory abstraction.FormatterFactory
+	loader              abstraction.UrlLoader
+	extractor           abstraction.ConfigsExtractor
+	collectionWriter    abstraction.ConfigCollectionFileWriter
+	groupRepository     repository.RepositoryGroupCreator
+	configuration       configs.Configuration
+	collectionFormatter abstraction.ConfigsCollectionFormatter
 }
 
 func (creator *ConfigCreator) Create(input string) error {
@@ -42,23 +41,10 @@ func (creator *ConfigCreator) Create(input string) error {
 		return errors.New(errText)
 	}
 
-	var formattedConfigs []structs.FormattedConfigAndType
-	for _, rawConfig := range rawConfigs {
-		configType := strings.Split(rawConfig, "://")[0]
-		formatter, err := creator.formatterFactory.Fetch(configType)
-		if err != nil {
-			continue
-		}
-
-		formattedConfig, err := formatter.Format(rawConfig)
-		formattedConfigAndType := structs.FormattedConfigAndType{FormattedConfig: formattedConfig, Type: configType}
-		if err == nil {
-			formattedConfigs = append(formattedConfigs, formattedConfigAndType)
-		}
-	}
-	if len(formattedConfigs) == 0 {
-		errText := creator.configuration.Errors.ConfigFormatError
-		return errors.New(errText)
+	formattedConfigs, err := creator.collectionFormatter.FormatCollection(rawConfigs)
+	if err != nil {
+		errText := creator.configuration.Errors.CollectiveFormatError
+		return fmt.Errorf("%v %w", errText, err)
 	}
 
 	newGroupId, err := creator.groupRepository.CreateGroup(groupName)

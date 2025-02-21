@@ -34,6 +34,7 @@ type Errors struct {
 	InvalidFormatter       string `mapstructure:"invalid_formatter"`
 	InvalidPortSetter      string `mapstructure:"invalid_port_setter"`
 	ListenersCountError    string `mapstructure:"listeners_count_error"`
+	CollectiveFormatError  string `mapstructure:"collective_format_error"`
 }
 
 type V2 struct {
