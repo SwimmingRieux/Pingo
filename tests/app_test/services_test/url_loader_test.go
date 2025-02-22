@@ -68,7 +68,10 @@ func urlLoaderValidTest(t *testing.T) {
 	// Arrange
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("mock response"))
+		_, err := w.Write([]byte("mock response"))
+		if err != nil {
+			t.Fatalf("unable to write http %v", err.Error())
+		}
 	}))
 	defer mockServer.Close()
 
@@ -90,7 +93,7 @@ func urlLoaderCantReadTest(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		conn, _, _ := w.(http.Hijacker).Hijack()
-		conn.Close() // Force an early close to simulate a read error
+		conn.Close()
 	}))
 	defer mockServer.Close()
 

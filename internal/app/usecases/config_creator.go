@@ -8,24 +8,30 @@ import (
 	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/repository"
-	"strconv"
 	"strings"
 	"sync"
 )
 
-type FormattedConfigAndType struct {
-	FormattedConfig string
-	Type            string
+type ConfigCreator struct {
+	loader              abstraction.UrlLoader
+	extractor           abstraction.ConfigsExtractor
+	collectionWriter    abstraction.ConfigCollectionFileWriter
+	groupRepository     repository.RepositoryGroupCreator
+	configuration       *configs.Configuration
+	collectionFormatter abstraction.ConfigsCollectionFormatter
 }
 
-type ConfigCreator struct {
-	loader           abstraction.UrlLoader
-	extractor        abstraction.ConfigsExtractor
-	writer           abstraction.ConfigsWriter
-	configRepository repository.RepositoryConfigCreator
-	groupRepository  repository.RepositoryGroupCreator
-	configuration    configs.Configuration
-	formatterFactory abstraction.FormatterFactory
+func NewConfigCreator(loader abstraction.UrlLoader, extractor abstraction.ConfigsExtractor,
+	collectionWriter abstraction.ConfigCollectionFileWriter, groupRepository repository.RepositoryGroupCreator,
+	configuration *configs.Configuration, collectionFormatter abstraction.ConfigsCollectionFormatter) *ConfigCreator {
+	return &ConfigCreator{
+		loader:              loader,
+		extractor:           extractor,
+		collectionWriter:    collectionWriter,
+		groupRepository:     groupRepository,
+		configuration:       configuration,
+		collectionFormatter: collectionFormatter,
+	}
 }
 
 func (creator *ConfigCreator) Create(input string) error {
@@ -48,28 +54,11 @@ func (creator *ConfigCreator) Create(input string) error {
 		return errors.New(errText)
 	}
 
-	var formattedConfigs []FormattedConfigAndType
-	for _, rawConfig := range rawConfigs {
-		configType := strings.Split(rawConfig, "://")[0]
-		formatter, err := creator.formatterFactory.Fetch(configType)
-		if err != nil {
-			continue
-		}
-
-		formattedConfig, err := formatter.Format(rawConfig)
-		formattedConfigAndType := FormattedConfigAndType{formattedConfig, configType}
-		if err == nil {
-			formattedConfigs = append(formattedConfigs, formattedConfigAndType)
-		}
+	formattedConfigs, err := creator.collectionFormatter.FormatCollection(rawConfigs)
+	if err != nil {
+		errText := creator.configuration.Errors.CollectiveFormatError
+		return fmt.Errorf("%v %w", errText, err)
 	}
-	if len(formattedConfigs) == 0 {
-		errText := creator.configuration.Errors.ConfigFormatError
-		return errors.New(errText)
-	}
-
-	goroutinesMaxCount := creator.configuration.GoroutinesMax
-	semaphore := make(chan struct{}, goroutinesMaxCount)
-	var wg sync.WaitGroup
 
 	newGroupId, err := creator.groupRepository.CreateGroup(groupName)
 	if err != nil {
@@ -77,27 +66,18 @@ func (creator *ConfigCreator) Create(input string) error {
 		return fmt.Errorf("%v %w", errText, err)
 	}
 
+	pingoPath := os.Getenv("PINGO_PATH")
 	v2ConfigsPath := creator.configuration.V2.ConfigurationPath
-	groupPath := path.Join(v2ConfigsPath, groupName)
+
+	groupPath := path.Join(pingoPath, v2ConfigsPath, groupName)
 	err = os.Mkdir(groupPath, 0755)
 	if err != nil {
 		errText := creator.configuration.Errors.DirectoryCreatingError
 		return fmt.Errorf("%v %w", errText, err)
 	}
 
-	for i, formattedConfig := range formattedConfigs {
-		wg.Add(1)
-		go func(i int, formattedConfig FormattedConfigAndType) {
-			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-			configPath := path.Join(groupPath, strconv.Itoa(i))
-			err := creator.writer.Write(formattedConfig.FormattedConfig, configPath)
-			if err == nil {
-				creator.configRepository.CreateConfig(newGroupId, configPath, formattedConfig.Type)
-			}
-		}(i, formattedConfig)
-	}
+	var wg sync.WaitGroup
+	creator.collectionWriter.WriteConfigsToFiles(formattedConfigs, &wg, groupPath, newGroupId)
 	wg.Wait()
 
 	return nil

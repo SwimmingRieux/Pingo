@@ -468,3 +468,6 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/go,jetbrains+all,vs
+
+v2_configurations/*
+!v2_configurations/.gitkeep

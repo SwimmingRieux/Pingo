@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -33,6 +34,7 @@ type Errors struct {
 	InvalidFormatter       string `mapstructure:"invalid_formatter"`
 	InvalidPortSetter      string `mapstructure:"invalid_port_setter"`
 	ListenersCountError    string `mapstructure:"listeners_count_error"`
+	CollectiveFormatError  string `mapstructure:"collective_format_error"`
 }
 
 type V2 struct {
@@ -44,7 +46,7 @@ func getDefaultConfig() string {
 }
 
 func NewConfig() (*Configuration, error) {
-	path := os.Getenv("cfgPath")
+	path := os.Getenv("CFG_PATH")
 	if path == "" {
 		path = getDefaultConfig()
 	}
@@ -52,7 +54,8 @@ func NewConfig() (*Configuration, error) {
 	viperConfig.SetConfigFile(path)
 	viperConfig.AutomaticEnv()
 	if err := viperConfig.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) {
 			return nil, fmt.Errorf("config file not found %w", err)
 		}
 		return nil, err

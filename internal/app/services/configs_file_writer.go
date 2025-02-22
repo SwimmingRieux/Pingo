@@ -6,15 +6,15 @@ import (
 	"pingo/configs"
 )
 
-type ConfigsWriter struct {
+type ConfigFileWriter struct {
 	configuration *configs.Configuration
 }
 
-func NewConfigsWriter(configuration *configs.Configuration) *ConfigsWriter {
-	return &ConfigsWriter{configuration: configuration}
+func NewConfigFileWriter(configuration *configs.Configuration) *ConfigFileWriter {
+	return &ConfigFileWriter{configuration: configuration}
 }
 
-func (writer *ConfigsWriter) Write(jsonConfig string, path string) error {
+func (writer *ConfigFileWriter) Write(jsonConfig string, path string) error {
 	file, err := os.Create(path)
 	if err != nil {
 		errText := writer.configuration.Errors.FileCreatingError
