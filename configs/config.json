@@ -15,7 +15,9 @@
       "invalid_port_setter": "given port setter is invalid: ",
       "not_enough_ports_found": "could not find enough ports for pinging the configs.",
       "listeners_count_error": "listeners count is not equal to configs count",
-      "collective_format_error": "couldn't format the collection of raw configs. "
+      "collective_format_error": "couldn't format the collection of raw configs. ",
+      "proxy_variables_set_error": "couldn't set proxy variables",
+      "v2ray_activate_error": "couldn't activate v2ray core"
     },
     "goroutines_max": 10,
     "ports_count_limit": 20,
@@ -23,7 +25,9 @@
     "listener_iteration_limit": 1000,
     "domains_big_enough": 15,
     "v2": {
-      "config_path": "v2_configurations"
+      "config_path": "v2_configurations",
+      "default_port": 12346,
+      "default_host": "127.0.0.1"
     }
   }
   

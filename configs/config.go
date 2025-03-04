@@ -35,10 +35,14 @@ type Errors struct {
 	InvalidPortSetter      string `mapstructure:"invalid_port_setter"`
 	ListenersCountError    string `mapstructure:"listeners_count_error"`
 	CollectiveFormatError  string `mapstructure:"collective_format_error"`
+	ProxyVariablesSetError string `mapstructure:"proxy_variables_set_error"`
+	V2rayActivateError     string `mapstructure:"v2ray_activate_error"`
 }
 
 type V2 struct {
 	ConfigurationPath string `mapstructure:"config_path"`
+	DefaultPort       uint16 `mapstructure:"default_port"`
+	DefaultHost       string `mapstructure:"default_host"`
 }
 
 func getDefaultConfig() string {

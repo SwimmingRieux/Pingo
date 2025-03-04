@@ -1,55 +1,56 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
+	"pingo/configs"
 )
 
-type Config struct {
-	Inbounds []Inbound `json:"inbounds"`
-}
-
-type Inbound struct {
-	Listen string `json:"listen"`
-	Port   int    `json:"port"`
-	Tag    string `json:"tag"`
-}
-
 type ConfigActivator struct {
+	configuration *configs.Configuration
 }
 
 func (c *ConfigActivator) Activate(path string) error {
-	file, err := os.Open(path)
+	port := c.configuration.V2.DefaultPort
+	host := c.configuration.V2.DefaultHost
+	errText := c.configuration.Errors.ProxyVariablesSetError
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy", "mode", "manual").Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.http", "host", host).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.http", "port", fmt.Sprintf("%d", port)).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.https", "host", host).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.https", "port", fmt.Sprintf("%d", port)).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.ftp", "host", host).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.ftp", "port", fmt.Sprintf("%d", port)).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.socks", "host", host).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+	if err := exec.Command("gsettings", "set", "org.gnome.system.proxy.socks", "port", fmt.Sprintf("%d", port)).Run(); err != nil {
+		return fmt.Errorf("%v %w", errText, err)
+	}
+
+	cmd := exec.Command("v2ray", "run", "-c", path)
+	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not open config file: %w", err)
-	}
-	defer file.Close()
-
-	var config Config
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		return fmt.Errorf("could not parse config file: %w", err)
-	}
-
-	var ports []int
-	for _, inbound := range config.Inbounds {
-		ports = append(ports, inbound.Port)
-	}
-
-	for _, port := range ports {
-		os.Setenv("HTTP_PROXY", fmt.Sprintf("127.0.0.1:%d", port))
-		os.Setenv("HTTPS_PROXY", fmt.Sprintf("127.0.0.1:%d", port))
-		os.Setenv("FTP_PROXY", fmt.Sprintf("127.0.0.1:%d", port))
-		os.Setenv("SOCKS_HOST", fmt.Sprintf("127.0.0.1:%d", port))
-	}
-
-	cmd := exec.Command("v2ray", "-c", path)
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run V2Ray: %w", err)
+		errText := c.configuration.Errors.V2rayActivateError
+		return fmt.Errorf("%v %w", errText, err)
 	}
 
 	return nil
