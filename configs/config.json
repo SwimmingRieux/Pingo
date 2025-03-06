@@ -17,13 +17,15 @@
       "listeners_count_error": "listeners count is not equal to configs count",
       "collective_format_error": "couldn't format the collection of raw configs. ",
       "proxy_variables_set_error": "couldn't set proxy variables",
-      "v2ray_activate_error": "couldn't activate v2ray core"
+      "v2ray_activate_error": "couldn't activate v2ray core",
+      "v2ray_deactivate_error": "couldn't kill the v2ray process"
     },
     "goroutines_max": 10,
     "ports_count_limit": 20,
     "pinger_goroutines_max": 10,
     "listener_iteration_limit": 1000,
     "domains_big_enough": 15,
+    "max_ping_wait_time_ms": 1000,
     "v2": {
       "config_path": "v2_configurations",
       "default_port": 12346,
