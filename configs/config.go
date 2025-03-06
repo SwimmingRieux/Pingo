@@ -15,6 +15,7 @@ type Configuration struct {
 	PortsCountLimit        int    `mapstructure:"ports_count_limit"`
 	ListenerIterationLimit int    `mapstructure:"listener_iteration_limit"`
 	DomainsBigEnough       int    `mapstructure:"domains_big_enough"`
+	MaxPingWaitTime        int    `mapstructure:"max_ping_wait_time_ms"`
 	V2                     V2     `mapstructure:"v2"`
 }
 
@@ -37,6 +38,7 @@ type Errors struct {
 	CollectiveFormatError  string `mapstructure:"collective_format_error"`
 	ProxyVariablesSetError string `mapstructure:"proxy_variables_set_error"`
 	V2rayActivateError     string `mapstructure:"v2ray_activate_error"`
+	V2rayDeactivateError   string `mapstructure:"v2ray_deactivate_error"`
 }
 
 type V2 struct {
