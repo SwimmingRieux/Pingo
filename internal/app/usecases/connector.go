@@ -7,10 +7,12 @@ import (
 )
 
 type Connector struct {
-	configRepository repository.RepositoryConfigRetriever
-	configActivator  abstraction.ConfigActivator
-	recorder         abstraction.NetworkLogRecorder
-	cancelFunc       context.CancelFunc
+	configRepository  repository.RepositoryConfigRetriever
+	configActivator   abstraction.ConfigActivator
+	configDeactivator abstraction.ConfigDeactivator
+	recorder          abstraction.NetworkLogRecorder
+	cancelFunc        context.CancelFunc
+	killFunc          func() error
 }
 
 func (connector *Connector) Connect(configId int) error {
@@ -20,7 +22,7 @@ func (connector *Connector) Connect(configId int) error {
 	if err != nil {
 		return err
 	}
-	if err = connector.configActivator.Activate(config.Path); err != nil {
+	if connector.killFunc, err = connector.configActivator.Activate(config.Path); err != nil {
 		return err
 	}
 
@@ -34,4 +36,5 @@ func (connector *Connector) Disconnect() {
 	if connector.cancelFunc != nil {
 		connector.cancelFunc()
 	}
+	connector.configDeactivator.Deactivate(connector.killFunc)
 }

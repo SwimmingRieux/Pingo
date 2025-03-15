@@ -1,5 +1,5 @@
 package abstraction
 
 type ConfigActivator interface {
-	Activate(path string) error
+	Activate(path string) (func() error, error)
 }
