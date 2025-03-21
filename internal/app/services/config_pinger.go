@@ -3,13 +3,15 @@ package services
 import (
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"pingo/configs"
 	"pingo/internal/app/services/abstraction"
 	"pingo/internal/domain/entities"
 	"pingo/internal/domain/structs"
+	"strconv"
+	"strings"
 	"sync"
-	"time"
 )
 
 type ConfigPinger struct {
@@ -40,13 +42,20 @@ func (pinger *ConfigPinger) Ping(config entities.Config, domain structs.DomainWi
 	}
 
 	listenerPort := listener.Addr().(*net.TCPAddr).Port
-	start := time.Now()
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("example.com:%d", listenerPort), time.Duration(maxScore)*time.Millisecond)
+	pingCmd := exec.Command("curl", "-o", "/dev/null", "-s", "-w", "%{time_connect}", domain.Domain.Address)
+	pingCmd.Env = append(os.Environ(),
+		fmt.Sprintf("https_proxy=http://127.0.0.1:%v", listenerPort),
+		fmt.Sprintf("http_proxy=http://127.0.0.1:%v", listenerPort))
+	result, err := pingCmd.Output()
+
 	if err != nil {
 		return
 	}
-	defer conn.Close()
-	ping := int(time.Since(start).Milliseconds())
+	floatPing, err := strconv.ParseFloat(strings.TrimSpace(string(result)), 64)
+	if err != nil {
+		return
+	}
+	ping := int(floatPing)
 
 	value, ok := domainScoresMap.Load(config.ConfigId)
 	if ok {

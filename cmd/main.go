@@ -14,6 +14,8 @@ func main() {
 	}
 	device := flag.String("device", "", "")
 	flag.Parse()
+	// todo: port setter
+	// todo: inbound set in formatter
 
 	if *device == "" {
 		log.Fatal(err)
