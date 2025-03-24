@@ -14,8 +14,7 @@ func main() {
 	}
 	device := flag.String("device", "", "")
 	flag.Parse()
-	// todo: port setter
-	// todo: inbound set in formatter
+	// todo: DI - search for structs that get configs.Configuration as value rther thn pointer
 
 	if *device == "" {
 		log.Fatal(err)
