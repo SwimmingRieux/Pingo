@@ -1,10 +1,11 @@
 package services
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hiddify/ray2sing/ray2sing"
 	"pingo/configs"
-	"strings"
 )
 
 type VmessConfigsFormatter struct {
@@ -18,10 +19,42 @@ func NewVmessConfigsFormatter(configuration *configs.Configuration) *VmessConfig
 }
 
 func (formatter *VmessConfigsFormatter) Format(rawConfig string) (string, error) {
-	outbound, err := ray2sing.Ray2Singbox(rawConfig, true)
+	outboundStr, err := ray2sing.Ray2Singbox(rawConfig, true)
 	if err != nil {
 		return "", err
 	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(outboundStr), &data); err != nil {
+		return "", err
+	}
+
+	var internalOutbounds = ""
+	if outbounds, ok := data["outbounds"].([]interface{}); ok && len(outbounds) > 0 {
+		if first, ok := outbounds[0].(map[string]interface{}); ok {
+			if xconfig, ok := first["xconfig"].(map[string]interface{}); ok {
+				if outboundsInterface, ok := xconfig["outbounds"].([]interface{}); ok {
+					internalOutboundsStr, err := json.Marshal(outboundsInterface)
+					if err != nil {
+						return "", err
+					}
+					internalOutbounds = string(internalOutboundsStr)
+				}
+			}
+		}
+	}
+
+	if internalOutbounds == "" {
+		return "", errors.New("no internal outbound found")
+	}
+
+	formattedConfig := formatter.buildJson(internalOutbounds)
+
+	return formattedConfig, nil
+
+}
+
+func (formatter *VmessConfigsFormatter) buildJson(internalOutbounds string) string {
 	dns := formatter.configuration.V2.DNS
 	inbounds := formatter.configuration.V2.Inbounds
 	log := formatter.configuration.V2.Log
@@ -36,10 +69,8 @@ func (formatter *VmessConfigsFormatter) Format(rawConfig string) (string, error)
     "policy": %s,
     "routing": %s,
     "stats": %s
-}`, dns, inbounds, log, outbound, policy, routing, stats)
-
-	return formattedConfig, nil
-
+}`, dns, inbounds, log, internalOutbounds, policy, routing, stats)
+	return formattedConfig
 }
 
 type VlessConfigsFormatter struct {
@@ -53,13 +84,42 @@ func NewVlessConfigsFormatter(configuration *configs.Configuration) *VlessConfig
 }
 func (formatter *VlessConfigsFormatter) Format(rawConfig string) (string, error) {
 
-	outboundEntry, err := ray2sing.Ray2Singbox(rawConfig, true)
+	outboundStr, err := ray2sing.Ray2Singbox(rawConfig, true)
 	if err != nil {
 		return "", err
 	}
-	start := strings.Index(outboundEntry, "{")
-	end := strings.LastIndex(outboundEntry, "}")
-	outbound := outboundEntry[start+1 : end]
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(outboundStr), &data); err != nil {
+		return "", err
+	}
+
+	var internalOutbounds = ""
+	if outbounds, ok := data["outbounds"].([]interface{}); ok && len(outbounds) > 0 {
+		if first, ok := outbounds[0].(map[string]interface{}); ok {
+			if xconfig, ok := first["xconfig"].(map[string]interface{}); ok {
+				if outboundsInterface, ok := xconfig["outbounds"].([]interface{}); ok {
+					internalOutboundsStr, err := json.Marshal(outboundsInterface)
+					if err != nil {
+						return "", err
+					}
+					internalOutbounds = string(internalOutboundsStr)
+				}
+			}
+		}
+	}
+
+	if internalOutbounds == "" {
+		return "", errors.New("no internal outbound found")
+	}
+
+	formattedConfig := formatter.buildJson(internalOutbounds)
+
+	return formattedConfig, nil
+
+}
+
+func (formatter *VlessConfigsFormatter) buildJson(internalOutbounds string) string {
 	dns := formatter.configuration.V2.DNS
 	inbounds := formatter.configuration.V2.Inbounds
 	log := formatter.configuration.V2.Log
@@ -70,14 +130,12 @@ func (formatter *VlessConfigsFormatter) Format(rawConfig string) (string, error)
     "dns": %s,
     "inbounds": %s,
     "log": %s,
-    %s,
+    "outbounds": %s,
     "policy": %s,
     "routing": %s,
     "stats": %s
-}`, dns, inbounds, log, outbound, policy, routing, stats)
-
-	return formattedConfig, nil
-
+}`, dns, inbounds, log, internalOutbounds, policy, routing, stats)
+	return formattedConfig
 }
 
 type TrojanConfigsFormatter struct {
@@ -91,10 +149,42 @@ func NewTrojanConfigsFormatter(configuration *configs.Configuration) *TrojanConf
 }
 
 func (formatter *TrojanConfigsFormatter) Format(rawConfig string) (string, error) {
-	outbound, err := ray2sing.Ray2Singbox(rawConfig, true)
+	outboundStr, err := ray2sing.Ray2Singbox(rawConfig, true)
 	if err != nil {
 		return "", err
 	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(outboundStr), &data); err != nil {
+		return "", err
+	}
+
+	var internalOutbounds = ""
+	if outbounds, ok := data["outbounds"].([]interface{}); ok && len(outbounds) > 0 {
+		if first, ok := outbounds[0].(map[string]interface{}); ok {
+			if xconfig, ok := first["xconfig"].(map[string]interface{}); ok {
+				if outboundsInterface, ok := xconfig["outbounds"].([]interface{}); ok {
+					internalOutboundsStr, err := json.Marshal(outboundsInterface)
+					if err != nil {
+						return "", err
+					}
+					internalOutbounds = string(internalOutboundsStr)
+				}
+			}
+		}
+	}
+
+	if internalOutbounds == "" {
+		return "", errors.New("no internal outbound found")
+	}
+
+	formattedConfig := formatter.buildJson(internalOutbounds)
+
+	return formattedConfig, nil
+
+}
+
+func (formatter *TrojanConfigsFormatter) buildJson(internalOutbounds string) string {
 	dns := formatter.configuration.V2.DNS
 	inbounds := formatter.configuration.V2.Inbounds
 	log := formatter.configuration.V2.Log
@@ -109,9 +199,8 @@ func (formatter *TrojanConfigsFormatter) Format(rawConfig string) (string, error
     "policy": %s,
     "routing": %s,
     "stats": %s
-}`, dns, inbounds, log, outbound, policy, routing, stats)
-
-	return formattedConfig, nil
+}`, dns, inbounds, log, internalOutbounds, policy, routing, stats)
+	return formattedConfig
 }
 
 type SsConfigsFormatter struct {
@@ -125,11 +214,42 @@ func NewSsConfigsFormatter(configuration *configs.Configuration) *SsConfigsForma
 }
 
 func (formatter *SsConfigsFormatter) Format(rawConfig string) (string, error) {
-
-	outbound, err := ray2sing.Ray2Singbox(rawConfig, true)
+	outboundStr, err := ray2sing.Ray2Singbox(rawConfig, true)
 	if err != nil {
 		return "", err
 	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(outboundStr), &data); err != nil {
+		return "", err
+	}
+
+	var internalOutbounds = ""
+	if outbounds, ok := data["outbounds"].([]interface{}); ok && len(outbounds) > 0 {
+		if first, ok := outbounds[0].(map[string]interface{}); ok {
+			if xconfig, ok := first["xconfig"].(map[string]interface{}); ok {
+				if outboundsInterface, ok := xconfig["outbounds"].([]interface{}); ok {
+					internalOutboundsStr, err := json.Marshal(outboundsInterface)
+					if err != nil {
+						return "", err
+					}
+					internalOutbounds = string(internalOutboundsStr)
+				}
+			}
+		}
+	}
+
+	if internalOutbounds == "" {
+		return "", errors.New("no internal outbound found")
+	}
+
+	formattedConfig := formatter.buildJson(internalOutbounds)
+
+	return formattedConfig, nil
+
+}
+
+func (formatter *SsConfigsFormatter) buildJson(internalOutbounds string) string {
 	dns := formatter.configuration.V2.DNS
 	inbounds := formatter.configuration.V2.Inbounds
 	log := formatter.configuration.V2.Log
@@ -144,8 +264,6 @@ func (formatter *SsConfigsFormatter) Format(rawConfig string) (string, error) {
     "policy": %s,
     "routing": %s,
     "stats": %s
-}`, dns, inbounds, log, outbound, policy, routing, stats)
-
-	return formattedConfig, nil
-
+}`, dns, inbounds, log, internalOutbounds, policy, routing, stats)
+	return formattedConfig
 }
