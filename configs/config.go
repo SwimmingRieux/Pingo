@@ -45,6 +45,12 @@ type V2 struct {
 	ConfigurationPath string `mapstructure:"config_path"`
 	DefaultPort       uint16 `mapstructure:"default_port"`
 	DefaultHost       string `mapstructure:"default_host"`
+	DNS               string `mapstructure:"dns"`
+	Inbounds          string `mapstructure:"inbounds"`
+	Log               string `mapstructure:"log"`
+	Policy            string `mapstructure:"policy"`
+	Routing           string `mapstructure:"routing"`
+	Stats             string `mapstructure:"stats"`
 }
 
 func getDefaultConfig() string {

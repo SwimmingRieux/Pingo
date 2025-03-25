@@ -29,7 +29,13 @@
     "v2": {
       "config_path": "v2_configurations",
       "default_port": 12346,
-      "default_host": "127.0.0.1"
+      "default_host": "127.0.0.1",
+      "dns": "{\n        \"disableFallback\": true,\n        \"servers\": [\n            {\n                \"address\": \"https://8.8.8.8/dns-query\",\n                \"domains\": [],\n                \"queryStrategy\": \"\"\n            },\n            {\n                \"address\": \"localhost\",\n                \"domains\": [],\n                \"queryStrategy\": \"\"\n            }\n        ],\n        \"tag\": \"dns\"\n    }",
+      "inbounds": "[\n        {\n            \"listen\": \"127.0.0.1\",\n            \"port\": 12346,\n            \"protocol\": \"socks\",\n            \"settings\": {\n                \"udp\": true\n            },\n            \"sniffing\": {\n                \"destOverride\": [\n                    \"http\",\n                    \"tls\",\n                    \"quic\"\n                ],\n                \"enabled\": true,\n                \"metadataOnly\": false,\n                \"routeOnly\": true\n            },\n            \"tag\": \"socks-in\"\n        },\n        {\n            \"listen\": \"127.0.0.1\",\n            \"port\": 12346,\n            \"protocol\": \"http\",\n            \"sniffing\": {\n                \"destOverride\": [\n                    \"http\",\n                    \"tls\",\n                    \"quic\"\n                ],\n                \"enabled\": true,\n                \"metadataOnly\": false,\n                \"routeOnly\": true\n            },\n            \"tag\": \"http-in\"\n        }\n    ]",
+      "log": "{\n        \"loglevel\": \"warning\"\n    }",
+      "policy": "{\n        \"levels\": {\n            \"1\": {\n                \"connIdle\": 30\n            }\n        },\n        \"system\": {\n            \"statsOutboundDownlink\": true,\n            \"statsOutboundUplink\": true\n        }\n    }",
+      "routing": "{\n        \"domainStrategy\": \"AsIs\",\n        \"rules\": [\n            {\n                \"inboundTag\": [\n                    \"socks-in\",\n                    \"http-in\"\n                ],\n                \"outboundTag\": \"dns-out\",\n                \"port\": \"53\",\n                \"type\": \"field\"\n            },\n            {\n                \"outboundTag\": \"proxy\",\n                \"port\": \"0-65535\",\n                \"type\": \"field\"\n            }\n        ]\n    }",
+      "stats": "{}"
     }
   }
   

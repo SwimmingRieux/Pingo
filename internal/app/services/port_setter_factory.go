@@ -7,12 +7,19 @@ import (
 	"sync"
 )
 
-type portSetterFactory struct {
+type PortSetterFactory struct {
 	portSetters   sync.Map
-	configuration configs.Configuration
+	configuration *configs.Configuration
 }
 
-func (factory *portSetterFactory) Fetch(portSetterType string) (abstraction.PortSetter, error) {
+func NewPortSetterFactory(configuration *configs.Configuration) *PortSetterFactory {
+	return &PortSetterFactory{
+		portSetters:   sync.Map{},
+		configuration: configuration,
+	}
+}
+
+func (factory *PortSetterFactory) Fetch(portSetterType string) (abstraction.PortSetter, error) {
 	if cached, ok := factory.portSetters.Load(portSetterType); ok {
 		return cached.(abstraction.PortSetter), nil
 	}
