@@ -9,7 +9,14 @@ import (
 
 type FormatterFactory struct {
 	formatters    sync.Map
-	configuration configs.Configuration
+	configuration *configs.Configuration
+}
+
+func NewFormatterFactory(configuration *configs.Configuration) *FormatterFactory {
+	return &FormatterFactory{
+		configuration: configuration,
+		formatters:    sync.Map{},
+	}
 }
 
 func (factory *FormatterFactory) Fetch(formatterType string) (abstraction.ConfigsFormatter, error) {
@@ -20,13 +27,13 @@ func (factory *FormatterFactory) Fetch(formatterType string) (abstraction.Config
 
 	switch formatterType {
 	case "vmess":
-		formatter = &VmessConfigsFormatter{}
+		formatter = NewVmessConfigsFormatter(factory.configuration)
 	case "vless":
-		formatter = &VlessConfigsFormatter{}
+		formatter = NewVlessConfigsFormatter(factory.configuration)
 	case "trojan":
-		formatter = &TrojanConfigsFormatter{}
+		formatter = NewTrojanConfigsFormatter(factory.configuration)
 	case "ss":
-		formatter = &SsConfigsFormatter{}
+		formatter = NewSsConfigsFormatter(factory.configuration)
 	default:
 		errText := factory.configuration.Errors.InvalidFormatter
 		return nil, fmt.Errorf("%v %v", errText, formatterType)
