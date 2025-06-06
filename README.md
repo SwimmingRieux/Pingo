@@ -1,0 +1,1 @@
+A network configuration management tool developed by Go, following Clean Architecture, emphasizing testability, and decoupled design dependency injection. It leverages Go's concurrency patterns, including counting semaphores, for efficient concurrent operations. Unit testing utilized Testcontainers.
